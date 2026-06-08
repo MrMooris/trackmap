@@ -120,14 +120,16 @@ onAuthStateChanged(auth, async user => {
     // All country markers — visited = white filled, not visited = empty circle
     const markers = Object.entries(COUNTRIES).map(([code, info]) => {
       const countryData = countries[code] || {};
+      const fs = countryData.firstSeen ? new Date(countryData.firstSeen).toLocaleDateString('hu-HU',{year:'numeric',month:'long',day:'numeric'}) : null;
+      const ls = countryData.lastSeen ? new Date(countryData.lastSeen).toLocaleDateString('hu-HU',{year:'numeric',month:'long',day:'numeric'}) : null;
       return {
         lat: info.lat,
         lng: info.lng,
         name: info.name,
         code,
         visited: visited.has(code),
-        firstSeen: countryData.firstSeen || null,
-        lastSeen: countryData.lastSeen || null,
+        firstSeen: fs,
+        lastSeen: ls,
         size: visited.has(code) ? 0.25 : 0.08,
         color: visited.has(code) ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.15)',
       };
@@ -212,6 +214,35 @@ onAuthStateChanged(auth, async user => {
           })
           .polygonStrokeColor(() => 'rgba(150,190,255,0.25)');
       }).catch(() => {});
+
+    // Animated plane on arcs
+    globe
+      .customLayerData(arcs)
+      .customThreeObject(() => {
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: (() => {
+            const c = document.createElement('canvas');
+            c.width=64;c.height=64;
+            const ctx=c.getContext('2d');
+            ctx.font='48px serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText('✈️',32,32);
+            return new THREE.CanvasTexture(c);
+          })(),
+          depthTest: false,
+        }));
+        sprite.scale.set(2,2,1);
+        return sprite;
+      })
+      .customThreeObjectUpdate((obj, d) => {
+        // Animate along arc
+        const t = (Date.now() % 3000) / 3000;
+        const lat = d.startLat + (d.endLat - d.startLat) * t;
+        const lng = d.startLng + (d.endLng - d.startLng) * t;
+        const alt = 0.08 + Math.sin(Math.PI * t) * 0.15;
+        Object.assign(obj.position, globe.getCoords(lat, lng, alt));
+      });
 
     globe.controls().autoRotate = true;
     globe.controls().autoRotateSpeed = 0.4;
