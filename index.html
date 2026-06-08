@@ -110,6 +110,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .d-btn-r{background:#0a0a2a;color:#a0c0ff;border:1px solid rgba(100,140,255,.3);}
 .d-btn-o{background:transparent;border:1px solid var(--border);color:var(--text);flex:0 0 auto;padding:9px 12px;}
 .d-btn:disabled{opacity:.35;pointer-events:none;}
+
+/* ── MEMORY MODAL ── */
+#memory-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+#memory-modal.open{display:flex;}
+#memory-box{background:#0a0a1e;border:1px solid rgba(100,140,255,.3);border-radius:14px;padding:20px;width:100%;max-width:360px;max-height:80vh;overflow-y:auto;}
+#memory-box h2{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;color:#a0c0ff;margin-bottom:4px;}
+#memory-box .place-name{font-size:16px;font-weight:600;color:#c8d8ff;margin-bottom:14px;}
+.mem-section{margin-bottom:14px;}
+.mem-label{font-size:10px;color:#4466aa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;font-family:'Space Mono',monospace;}
+.star-row{display:flex;gap:6px;}
+.star{font-size:22px;cursor:pointer;opacity:.3;transition:opacity .15s;}
+.star.active{opacity:1;}
+.occasion-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.occ-btn{background:#0f0f28;border:1px solid rgba(100,140,255,.2);border-radius:8px;padding:6px 4px;text-align:center;cursor:pointer;font-size:18px;transition:all .15s;}
+.occ-btn.active{border-color:rgba(160,200,255,.7);background:rgba(100,140,255,.15);}
+.occ-btn span{display:block;font-size:9px;color:#4466aa;margin-top:2px;}
+.mem-input{width:100%;background:#0f0f28;border:1px solid rgba(100,140,255,.2);border-radius:8px;padding:10px 12px;color:#c8d8ff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;}
+.mem-input:focus{border-color:rgba(160,200,255,.5);}
+.mem-actions{display:flex;gap:8px;margin-top:4px;}
+.mem-save{flex:1;background:#1a2a5a;border:1px solid rgba(100,140,255,.4);color:#a0c0ff;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
+.mem-cancel{background:transparent;border:1px solid rgba(100,140,255,.15);color:#4466aa;border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -258,7 +279,71 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 
 <div id="toast"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+// ── MEMORY SYSTEM ─────────────────────────────────────────────────────────
+let memoryTarget = null; // {sessionId, placeIdx}
+let memStar = 0, memOcc = null;
+
+const OCC_ICONS = {
+  couple:'💑', special:'💍', family:'👨‍👩‍👧', friends:'👫',
+  party:'🎉', travel:'✈️', food:'🍽️', nature:'🌿',
+  sport:'⚽', work:'💼', first:'🥇', other:'📌'
+};
+
+window.openMemory = function(sessionId, placeIdx) {
+  const s = sessions.find(x => x.id === sessionId);
+  if (!s || !s.places) return;
+  const place = s.places[placeIdx];
+  if (!place) return;
+  memoryTarget = {sessionId, placeIdx};
+  memStar = place.star || 0;
+  memOcc = place.occ || null;
+  document.getElementById('mem-place-name').textContent = (typeof place === 'string' ? place : place.name) || '–';
+  document.getElementById('mem-note').value = place.note || '';
+  setStar(memStar);
+  document.querySelectorAll('.occ-btn').forEach(b => b.classList.toggle('active', b.dataset.v === memOcc));
+  document.getElementById('memory-modal').classList.add('open');
+}
+
+window.closeMemory = function() {
+  document.getElementById('memory-modal').classList.remove('open');
+  memoryTarget = null;
+}
+
+window.setStar = function(v) {
+  memStar = v;
+  document.querySelectorAll('.star').forEach(s => s.classList.toggle('active', parseInt(s.dataset.v) <= v));
+}
+
+window.setOcc = function(el) {
+  memOcc = el.dataset.v === memOcc ? null : el.dataset.v;
+  document.querySelectorAll('.occ-btn').forEach(b => b.classList.toggle('active', b.dataset.v === memOcc));
+}
+
+window.saveMemory = function() {
+  if (!memoryTarget) return;
+  const s = sessions.find(x => x.id === memoryTarget.sessionId);
+  if (!s || !s.places) return;
+  const place = s.places[memoryTarget.placeIdx];
+  if (!place || typeof place === 'string') return;
+  place.star = memStar;
+  place.occ = memOcc;
+  place.note = document.getElementById('mem-note').value.trim();
+  // Save to Firebase
+  if (uid && s.fbKey) {
+    set(uRef(`sessions/${s.fbKey}/places`), s.places).catch(()=>{});
+  }
+  closeMemory();
+  renderSessions();
+  showToast('Emlék mentve!');
+}
+
+// Close modal on backdrop click
+document.getElementById('memory-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeMemory();
+});
+
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, get, push, remove, onValue }
@@ -399,7 +484,8 @@ function listenLive(){
 window.startTracking=function(){
   if(!navigator.geolocation){showToast('GPS nem elérhető');return;}
   watching=true;
-  currentSession={id:Date.now(),date:new Date().toISOString(),points:[],distKm:0,speeds:[]};
+  currentSession={id:Date.now(),date:new Date().toISOString(),points:[],distKm:0,speeds:[],places:[]};
+  lastFetchedSettlement=null;
   currentPolyline=L.polyline([],{color:'#fff',weight:5,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(lmap);
   setBtns(true);
   setGps('yellow','GPS keresés…');
@@ -413,6 +499,11 @@ window.stopTracking=function(silent){
   setBtns(false);
   setGps('','GPS inaktív');
   if(currentSession&&currentSession.points.length>1){
+    // Close last place time
+    if(currentSession.places&&currentSession.places.length>0){
+      const last=currentSession.places[currentSession.places.length-1];
+      if(last&&!last.left) last.left=new Date().toLocaleString('hu-HU',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }
     currentSession.distKm=Math.round(calcDist(currentSession.points)*100)/100;
     const spds=currentSession.speeds.filter(s=>s>0);
     currentSession.avgSpeed=spds.length?Math.round(spds.reduce((a,b)=>a+b,0)/spds.length):0;
@@ -463,7 +554,8 @@ function onPos(pos){
   const distStr=_d<1?Math.round(_d*1000)+'<span class="sc-unit">m</span>':_d.toFixed(2)+'<span class="sc-unit">km</span>';
   if(isMobile)document.getElementById('m-dist').innerHTML=distStr;
   else document.getElementById('d-dist').innerHTML=distStr;
-  if((pts.length===1||pts.length%40===0)&&accuracy<=20)fetchCountry(lat,lng);
+  // Fetch location with strict accuracy check (handled inside fetchLocation)
+  fetchLocation(lat, lng, accuracy);
 }
 
 function onErr(){setGps('yellow','GPS hiba');}
@@ -521,19 +613,60 @@ function addNoteMarker(note){
 }
 function loadNotesOnMap(){noteMarkers.forEach(m=>lmap.removeLayer(m));noteMarkers=[];notes.forEach(n=>addNoteMarker(n));}
 
-// ── COUNTRY ───────────────────────────────────────────────────────────────
-async function fetchCountry(lat,lng){
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=3`,{headers:{'Accept-Language':'hu'}});
-    const j=await r.json();
-    const country=j.address?.country,code=j.address?.country_code?.toUpperCase();
-    if(country&&code&&!countries[code]){
-      countries[code]={name:country,code,firstSeen:new Date().toISOString()};
-      saveCountry(code,countries[code]);
+// ── LOCATION FETCH ───────────────────────────────────────────────────────
+let lastFetchedSettlement = null;
+let lastFetchTime = 0;
+const FETCH_COOLDOWN = 30000; // min 30s between fetches
+
+async function fetchLocation(lat, lng, accuracy) {
+  // STRICT: csak ≤20m pontossággal — laptopot, IP-alapú pozíciót kiszűri
+  if (accuracy > 20) return;
+  // Cooldown hogy ne bombázzuk az API-t
+  const now = Date.now();
+  if (now - lastFetchTime < FETCH_COOLDOWN) return;
+  lastFetchTime = now;
+
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
+      {headers:{'Accept-Language':'hu'}}
+    );
+    const j = await r.json();
+    const addr = j.address || {};
+
+    // Country
+    const country = addr.country, code = addr.country_code?.toUpperCase();
+    if (country && code && !countries[code]) {
+      countries[code] = {name:country, code, firstSeen:new Date().toISOString()};
+      saveCountry(code, countries[code]);
       updateAll();
-      showToast('🌍 Új ország: '+country);
+      showToast('🌍 Új ország: ' + country);
     }
-  }catch(e){}
+
+    // Settlement — csak valódi helyszín
+    const settlement = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || addr.municipality || null;
+    if (!settlement || !currentSession) return;
+
+    if (!currentSession.places) currentSession.places = [];
+
+    const last = currentSession.places.length > 0 ? currentSession.places[currentSession.places.length - 1] : null;
+
+    if (settlement !== lastFetchedSettlement) {
+      // Lezárjuk az előző helyszín idejét
+      if (last && !last.left) {
+        last.left = new Date().toLocaleString('hu-HU', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+      }
+      lastFetchedSettlement = settlement;
+      const now1 = new Date();
+      const arrived = now1.toLocaleString('hu-HU', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+      currentSession.places.push({name: settlement, arrived, left: null});
+      showToast('📍 ' + settlement);
+    } else {
+      if (last && last.name === settlement) {
+        last.left = new Date().toLocaleString('hu-HU', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+      }
+    }
+  } catch(e) {}
 }
 
 // ── ROUTES ────────────────────────────────────────────────────────────────
@@ -642,6 +775,25 @@ function renderSessions(){
     const d=new Date(s.date);
     const ds=d.toLocaleDateString('hu-HU')+' '+d.toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
     const avgSpd=s.avgSpeed?` · ${s.avgSpeed} km/h`:'';
+    const placesHtml=(s.places&&s.places.length)?
+      (function(){
+        const OCC={'couple':'💑','special':'💍','family':'👨‍👩‍👧','friends':'👫','party':'🎉','travel':'✈️','food':'🍽️','nature':'🌿','sport':'⚽','work':'💼','first':'🥇','other':'📌'};
+        return '<div style="margin-top:8px">'+s.places.map(function(p,pi){
+          if(typeof p==='string') return '<div style="font-size:11px;color:#4466aa;margin-bottom:4px">📍 '+p+'</div>';
+          const timeStr=p.arrived?(p.left&&p.left!==p.arrived?p.arrived+' – '+p.left:p.arrived):'';
+          const stars=p.star?'★'.repeat(p.star)+'☆'.repeat(5-p.star):'';
+          const occIcon=p.occ?(OCC[p.occ]||''):'';
+          return '<div style="background:rgba(100,140,255,.06);border:1px solid rgba(100,140,255,.12);border-radius:8px;padding:7px 10px;margin-bottom:5px">'
+            +'<div style="display:flex;align-items:center;justify-content:space-between">'
+            +'<span style="font-size:12px;color:#8899cc;font-weight:600">📍 '+p.name+'</span>'
+            +'<button onclick="openMemory('+s.id+','+pi+')" style="background:transparent;border:1px solid rgba(100,140,255,.2);color:#4466aa;border-radius:5px;padding:1px 7px;font-size:10px;cursor:pointer">'+(p.star?'✏️':'+ Emlék')+'</button>'
+            +'</div>'
+            +(timeStr?'<div style="font-size:10px;color:#334466;margin-top:2px">🕐 '+timeStr+'</div>':'')
+            +(stars?'<div style="font-size:11px;color:#6688aa;margin-top:2px">'+stars+' '+occIcon+'</div>':'')
+            +(p.note?'<div style="font-size:11px;color:#5577aa;margin-top:3px;font-style:italic">"'+p.note+'"</div>':'')
+            +'</div>';
+        }).join('')+'</div>';
+      })():'';
     const pts=s.points||[];
     const alts=pts.filter(p=>p.alt!=null).map(p=>p.alt);
     const elevStr=alts.length>1?' · +'+Math.round(alts.reduce((acc,a,i)=>i>0&&a>alts[i-1]?acc+(a-alts[i-1]):acc,0))+'m':'';
@@ -650,7 +802,7 @@ function renderSessions(){
         <span class="si-date">${ds}</span>
         <button class="si-del" onclick="event.stopPropagation();delSession('${s.fbKey}',${s.id})">✕</button>
       </div>
-      <div class="si-dist">${(s.distKm||0).toFixed(2)} km${avgSpd}${elevStr}</div>
+      <div class="si-dist">${(s.distKm||0).toFixed(2)} km${avgSpd}${elevStr}</div>${placesHtml}
       <div class="si-btns">
         <button class="si-btn" onclick="focusSession(${s.id})">🗺 Térkép</button>
         <button class="si-btn" onclick="replaySession(${s.id})">▶ Visszajátszás</button>
@@ -729,5 +881,48 @@ window.showToast=function(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);
 }
 </script>
+
+<!-- MEMORY MODAL -->
+<div id="memory-modal">
+  <div id="memory-box">
+    <h2>⬡ EMLÉK RÖGZÍTÉSE</h2>
+    <div class="place-name" id="mem-place-name"></div>
+    <div class="mem-section">
+      <div class="mem-label">Értékelés</div>
+      <div class="star-row" id="star-row">
+        <span class="star" data-v="1" onclick="setStar(1)">★</span>
+        <span class="star" data-v="2" onclick="setStar(2)">★</span>
+        <span class="star" data-v="3" onclick="setStar(3)">★</span>
+        <span class="star" data-v="4" onclick="setStar(4)">★</span>
+        <span class="star" data-v="5" onclick="setStar(5)">★</span>
+      </div>
+    </div>
+    <div class="mem-section">
+      <div class="mem-label">Alkalom</div>
+      <div class="occasion-grid">
+        <div class="occ-btn" data-v="couple" onclick="setOcc(this)">💑<span>Páros</span></div>
+        <div class="occ-btn" data-v="special" onclick="setOcc(this)">💍<span>Különleges</span></div>
+        <div class="occ-btn" data-v="family" onclick="setOcc(this)">👨‍👩‍👧<span>Család</span></div>
+        <div class="occ-btn" data-v="friends" onclick="setOcc(this)">👫<span>Barátok</span></div>
+        <div class="occ-btn" data-v="party" onclick="setOcc(this)">🎉<span>Buli</span></div>
+        <div class="occ-btn" data-v="travel" onclick="setOcc(this)">✈️<span>Utazás</span></div>
+        <div class="occ-btn" data-v="food" onclick="setOcc(this)">🍽️<span>Étterem</span></div>
+        <div class="occ-btn" data-v="nature" onclick="setOcc(this)">🌿<span>Természet</span></div>
+        <div class="occ-btn" data-v="sport" onclick="setOcc(this)">⚽<span>Sport</span></div>
+        <div class="occ-btn" data-v="work" onclick="setOcc(this)">💼<span>Munka</span></div>
+        <div class="occ-btn" data-v="first" onclick="setOcc(this)">🥇<span>Először</span></div>
+        <div class="occ-btn" data-v="other" onclick="setOcc(this)">📌<span>Egyéb</span></div>
+      </div>
+    </div>
+    <div class="mem-section">
+      <div class="mem-label">Megjegyzés</div>
+      <textarea class="mem-input" id="mem-note" rows="3" placeholder="Mi történt itt? Mit éreztél?"></textarea>
+    </div>
+    <div class="mem-actions">
+      <button class="mem-cancel" onclick="closeMemory()">Mégse</button>
+      <button class="mem-save" onclick="saveMemory()">💾 Mentés</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
