@@ -183,15 +183,15 @@ onAuthStateChanged(auth, async user => {
       .pathDashLength(0.04)
       .pathDashGap(0.02)
       .pathDashAnimateTime(4000)
-      // Static base arcs
-      .arcsData(arcs)
+      // Arcs setup (overridden below)
+      .arcsData([])
       .arcStartLat('startLat')
       .arcStartLng('startLng')
       .arcEndLat('endLat')
       .arcEndLng('endLng')
-      .arcColor(() => 'rgba(160,210,255,0.4)')
+      .arcColor(() => 'rgba(100,170,255,0.55)')
       .arcAltitude(0.03)
-      .arcStroke(0.4)
+      .arcStroke(1.8)
       .arcDashLength(1)
       .arcDashGap(0)
       .arcDashAnimateTime(0)
@@ -202,14 +202,18 @@ onAuthStateChanged(auth, async user => {
       .polygonStrokeColor(() => 'rgba(150,190,255,0.3)')
       .polygonAltitude(0.001);
 
-    // Animated light streak on arcs (separate layer)
+    // Base arcs + needle streak combined
+    const allArcs = [
+      ...arcs.map(a => ({...a, type:'base'})),
+      ...arcs.map(a => ({...a, type:'needle'}))
+    ];
     globe
-      .arcsData([...arcs, ...arcs.map(a => ({...a, isStreak:true}))])
-      .arcColor(d => d.isStreak ? 'rgba(255,255,255,0.9)' : 'rgba(160,210,255,0.4)')
-      .arcStroke(d => d.isStreak ? 0.8 : 0.4)
-      .arcDashLength(d => d.isStreak ? 0.04 : 1)
-      .arcDashGap(d => d.isStreak ? 0.96 : 0)
-      .arcDashAnimateTime(d => d.isStreak ? 3000 : 0)
+      .arcsData(allArcs)
+      .arcColor(d => d.type==='base' ? 'rgba(100,170,255,0.55)' : 'rgba(255,255,255,0.95)')
+      .arcStroke(d => d.type==='base' ? 1.8 : 0.3)
+      .arcDashLength(d => d.type==='base' ? 1 : 0.06)
+      .arcDashGap(d => d.type==='base' ? 0 : 0.94)
+      .arcDashAnimateTime(d => d.type==='base' ? 0 : 2500)
       .arcLabel(() => '');
 
     // Load country borders
