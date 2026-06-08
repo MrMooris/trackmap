@@ -215,7 +215,11 @@ onAuthStateChanged(auth, async user => {
           .polygonStrokeColor(() => 'rgba(150,190,255,0.25)');
       }).catch(() => {});
 
-    globe.controls().autoRotate = true;
+    globe.controls().autoRotate = false;
+    rotating = false;
+    document.getElementById('rot-btn').textContent = '▶ Auto forgás';
+    document.getElementById('rot-btn').style.background = '#0a1a3a';
+    document.getElementById('rot-btn').style.borderColor = 'rgba(100,140,255,.3)';
 
     // Plane animation removed - arcs show travel routes clearly
     globe.controls().autoRotateSpeed = 0.4;
