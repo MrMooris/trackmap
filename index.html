@@ -636,11 +636,17 @@ async function fetchLocation(lat, lng, accuracy) {
 
     // Country
     const country = addr.country, code = addr.country_code?.toUpperCase();
-    if (country && code && !countries[code]) {
-      countries[code] = {name:country, code, firstSeen:new Date().toISOString()};
-      saveCountry(code, countries[code]);
-      updateAll();
-      showToast('🌍 Új ország: ' + country);
+    if (country && code) {
+      if (!countries[code]) {
+        countries[code] = {name:country, code, firstSeen:new Date().toISOString(), lastSeen:new Date().toISOString()};
+        saveCountry(code, countries[code]);
+        updateAll();
+        showToast('🌍 Új ország: ' + country);
+      } else {
+        // Frissítjük a lastSeen-t
+        countries[code].lastSeen = new Date().toISOString();
+        if (uid) set(uRef('countries/' + code + '/lastSeen'), countries[code].lastSeen).catch(()=>{});
+      }
     }
 
     // Settlement — csak valódi helyszín
