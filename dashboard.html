@@ -10,8 +10,21 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222536;--border:#2d3147;--accent:#4f8ef7;--text:#e8eaf2;--muted:#7b7f99;--green:#4ff79a;--red:#f74f4f;--yellow:#f7c94f;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+#login-screen h1{font-family:'Space Mono',monospace;font-size:20px;letter-spacing:2px;color:var(--accent);margin-bottom:8px;}
+#login-screen p{font-size:14px;color:var(--muted);margin-bottom:32px;}
+.lf{width:100%;max-width:340px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:13px 16px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;}
+.lf:focus{border-color:var(--accent);}
+.lb{width:100%;max-width:340px;padding:14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer;margin-top:4px;}
+.lb:active{opacity:.85;}
+#l-err{color:var(--red);font-size:12px;margin-top:10px;text-align:center;min-height:18px;}
+
+/* APP */
+#app{display:none;flex-direction:column;height:100vh;}
 #header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
-#header h1{font-family:'Space Mono',monospace;font-size:16px;letter-spacing:2px;color:var(--accent);}
+#header h1{font-family:'Space Mono',monospace;font-size:15px;letter-spacing:2px;color:var(--accent);}
 .hrow{display:flex;align-items:center;gap:10px;}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);}
 .dot.green{background:var(--green);box-shadow:0 0 6px var(--green);}
@@ -19,12 +32,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .dot.red{background:var(--red);}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hlabel{font-size:12px;color:var(--muted);}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.logout-btn:hover{border-color:var(--accent);color:var(--text);}
 #main{flex:1;display:flex;overflow:hidden;}
 #sidebar{width:320px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
 #map{flex:1;}
 .leaflet-control-attribution{display:none!important;}
-
-/* sidebar */
 #live-card{padding:16px 20px;border-bottom:1px solid var(--border);}
 .live-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .live-title .dot{width:6px;height:6px;}
@@ -33,7 +46,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;}
 .sc-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
 .sc-unit{font-size:11px;color:var(--muted);margin-left:2px;}
-.coords{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px;line-height:1.6;}
+.coords{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px;line-height:1.8;white-space:pre;}
 #sections{flex:1;overflow-y:auto;}
 .section{border-bottom:1px solid var(--border);}
 .section-title{padding:10px 20px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
@@ -42,59 +55,73 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .country-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;margin:3px;font-size:12px;}
 .si{background:var(--surface2);border-radius:8px;padding:9px 12px;margin-bottom:7px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s;}
 .si:hover{border-color:var(--accent);}
-.si-top{display:flex;justify-content:space-between;align-items:center;}
 .si-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);}
 .si-dist{font-size:12px;color:var(--muted);margin-top:2px;}
 .stat-big-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:4px;}
 .empty{color:var(--muted);font-size:12px;text-align:center;padding:16px 0;}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;}
 #toast.show{opacity:1;}
-.last-seen{font-size:11px;color:var(--muted);margin-top:6px;}
 </style>
 </head>
 <body>
-<div id="header">
-  <h1>⬡ TRACKMAP — DASHBOARD</h1>
-  <div class="hrow">
-    <div class="dot" id="live-dot"></div>
-    <span class="hlabel" id="live-label">Csatlakozás…</span>
-    <span class="hlabel" id="last-seen-h" style="margin-left:8px;"></span>
-  </div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <h1>⬡ TRACKMAP</h1>
+  <p>Dashboard – Laptop nézet</p>
+  <input class="lf" type="email" id="l-email" placeholder="Email cím" autocomplete="email"/>
+  <input class="lf" type="password" id="l-pass" placeholder="Jelszó" autocomplete="current-password"/>
+  <button class="lb" onclick="doLogin()">Belépés</button>
+  <div id="l-err"></div>
 </div>
-<div id="main">
-  <div id="sidebar">
-    <div id="live-card">
-      <div class="live-title"><div class="dot" id="live-dot2"></div>ÉLŐ POZÍCIÓ</div>
-      <div class="stat-grid">
-        <div class="sc"><div class="sc-label">Sebesség</div><div class="sc-val" id="live-speed">–<span class="sc-unit">km/h</span></div></div>
-        <div class="sc"><div class="sc-label">Állapot</div><div class="sc-val" id="live-status" style="font-size:13px;padding-top:4px;">Offline</div></div>
-      </div>
-      <div class="coords" id="live-coords">Koordináta: –<br>Utolsó frissítés: –</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="header">
+    <h1>⬡ TRACKMAP — DASHBOARD</h1>
+    <div class="hrow">
+      <div class="dot" id="live-dot"></div>
+      <span class="hlabel" id="live-label">Betöltés…</span>
+      <button class="logout-btn" onclick="doLogout()">Kilépés</button>
     </div>
-    <div id="sections">
-      <div class="section">
-        <div class="section-title" onclick="toggleSection('stats')">STATISZTIKA <span id="arr-stats">▾</span></div>
-        <div class="section-body" id="sec-stats">
-          <div class="stat-big-grid">
-            <div class="sc"><div class="sc-label">Összes km</div><div class="sc-val" id="t-dist">–</div></div>
-            <div class="sc"><div class="sc-label">Útvonalak</div><div class="sc-val" id="t-sess">–</div></div>
-            <div class="sc"><div class="sc-label">Országok</div><div class="sc-val" id="t-ctry">–</div></div>
-            <div class="sc"><div class="sc-label">GPS pontok</div><div class="sc-val" id="t-pts">–</div></div>
+  </div>
+  <div id="main">
+    <div id="sidebar">
+      <div id="live-card">
+        <div class="live-title"><div class="dot" id="live-dot2"></div>ÉLŐ POZÍCIÓ</div>
+        <div class="stat-grid">
+          <div class="sc"><div class="sc-label">Sebesség</div><div class="sc-val" id="live-speed">–<span class="sc-unit">km/h</span></div></div>
+          <div class="sc"><div class="sc-label">Állapot</div><div class="sc-val" id="live-status" style="font-size:13px;padding-top:4px;">Offline</div></div>
+        </div>
+        <div class="coords" id="live-coords">Koordináta: –
+Frissítve: –</div>
+      </div>
+      <div id="sections">
+        <div class="section">
+          <div class="section-title" onclick="toggleSection('stats')">STATISZTIKA <span id="arr-stats">▾</span></div>
+          <div class="section-body" id="sec-stats">
+            <div class="stat-big-grid">
+              <div class="sc"><div class="sc-label">Összes km</div><div class="sc-val" id="t-dist">–</div></div>
+              <div class="sc"><div class="sc-label">Útvonalak</div><div class="sc-val" id="t-sess">–</div></div>
+              <div class="sc"><div class="sc-label">Országok</div><div class="sc-val" id="t-ctry">–</div></div>
+              <div class="sc"><div class="sc-label">GPS pontok</div><div class="sc-val" id="t-pts">–</div></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="section">
-        <div class="section-title" onclick="toggleSection('countries')">ORSZÁGOK <span id="arr-countries">▾</span></div>
-        <div class="section-body" id="sec-countries"><div class="empty">Betöltés…</div></div>
-      </div>
-      <div class="section">
-        <div class="section-title" onclick="toggleSection('sessions')">ÚTVONALAK <span id="arr-sessions">▾</span></div>
-        <div class="section-body" id="sec-sessions"><div class="empty">Betöltés…</div></div>
+        <div class="section">
+          <div class="section-title" onclick="toggleSection('countries')">ORSZÁGOK <span id="arr-countries">▾</span></div>
+          <div class="section-body" id="sec-countries"><div class="empty">Betöltés…</div></div>
+        </div>
+        <div class="section">
+          <div class="section-title" onclick="toggleSection('sessions')">ÚTVONALAK <span id="arr-sessions">▾</span></div>
+          <div class="section-body" id="sec-sessions"><div class="empty">Betöltés…</div></div>
+        </div>
       </div>
     </div>
+    <div id="map"></div>
   </div>
-  <div id="map"></div>
 </div>
+
 <div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -102,7 +129,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, get }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD2HhTpuw0pex4on-NwGvfODy0vxBVrjBg",
@@ -118,154 +146,141 @@ const fbApp = initializeApp(firebaseConfig);
 const db = getDatabase(fbApp);
 const auth = getAuth(fbApp);
 
-// ── MAP ───────────────────────────────────────────────────────────────────
-const lmap = L.map('map',{zoomControl:true,attributionControl:false}).setView([47.5,19.0],6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(lmap);
-
-let liveMarker = null, livePulse = null, allPolylines = [];
-let sessions = [], countries = {};
-let uid = null;
-let liveTimer = null;
+let uid = null, lmap = null, mapInited = false;
+let sessions = [], countries = {}, allPolylines = [], liveMarker = null, liveTimer = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────────
-setDot('live-dot','yellow'); setDot('live-dot2','yellow');
-document.getElementById('live-label').textContent = 'Csatlakozás…';
+window.doLogin = async function() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('l-err');
+  if (!email||!pass) { errEl.textContent='Add meg az emailt és jelszót!'; return; }
+  errEl.textContent = '';
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e) {
+    const msgs={'auth/invalid-credential':'Hibás email vagy jelszó.','auth/wrong-password':'Hibás jelszó.','auth/too-many-requests':'Túl sok próbálkozás.'};
+    errEl.textContent = msgs[e.code]||'Hiba: '+e.message;
+  }
+}
 
-signInAnonymously(auth).then(cred => {
-  uid = cred.user.uid;
-  loadAll();
-  listenLive();
-  setDot('live-dot',''); setDot('live-dot2','');
-  document.getElementById('live-label').textContent = 'Kapcsolódva';
-}).catch(() => {
-  setDot('live-dot','red');
-  document.getElementById('live-label').textContent = 'Firebase hiba';
+window.doLogout = async function() { await signOut(auth); }
+document.getElementById('l-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    uid = user.uid;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initMap(); loadAll(); listenLive();
+  } else {
+    uid = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
 });
 
 function uRef(p) { return ref(db, `users/${uid}/${p}`); }
 
-// ── LOAD ALL DATA ─────────────────────────────────────────────────────────
+// ── MAP ───────────────────────────────────────────────────────────────────
+function initMap() {
+  if (mapInited) return; mapInited = true;
+  lmap = L.map('map',{zoomControl:true,attributionControl:false}).setView([47.5,19.0],6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(lmap);
+}
+
+// ── LOAD ──────────────────────────────────────────────────────────────────
 async function loadAll() {
   try {
-    const [sSnap, cSnap] = await Promise.all([get(uRef('sessions')), get(uRef('countries'))]);
+    const [sSnap,cSnap] = await Promise.all([get(uRef('sessions')),get(uRef('countries'))]);
     sessions = [];
-    if (sSnap.exists()) {
-      sessions = Object.entries(sSnap.val()).map(([k,v])=>({...v,fbKey:k}));
-      sessions.sort((a,b)=>a.id-b.id);
-    }
-    countries = cSnap.exists() ? cSnap.val() : {};
-    drawAllRoutes();
-    updateStats();
-    renderCountries();
-    renderSessions();
+    if (sSnap.exists()) { sessions=Object.entries(sSnap.val()).map(([k,v])=>({...v,fbKey:k})); sessions.sort((a,b)=>a.id-b.id); }
+    countries = cSnap.exists()?cSnap.val():{};
+    drawAllRoutes(); updateStats(); renderCountries(); renderSessions();
   } catch(e) { showToast('Betöltési hiba'); }
 }
 
-// ── LIVE LISTENER ─────────────────────────────────────────────────────────
+// ── LIVE ──────────────────────────────────────────────────────────────────
 function listenLive() {
   onValue(uRef('live'), snap => {
     if (!snap.exists()) return;
-    const {lat, lng, speed, t} = snap.val();
-    const age = Date.now() - t;
-    const isRecent = age < 120000; // 2 percen belül = online
-
-    setDot('live-dot', isRecent ? 'green' : 'yellow');
-    setDot('live-dot2', isRecent ? 'green' : 'yellow');
-    document.getElementById('live-label').textContent = isRecent ? 'Online' : 'Utolsó pozíció';
-    document.getElementById('live-speed').innerHTML = speed + '<span class="sc-unit">km/h</span>';
-    document.getElementById('live-status').textContent = isRecent ? (speed > 2 ? 'Mozgásban' : 'Áll') : 'Offline';
-    document.getElementById('live-coords').textContent =
-      'Koordináta: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '\n' +
-      'Frissítve: ' + new Date(t).toLocaleTimeString('hu-HU');
-
-    // Marker
+    const {lat,lng,speed,t} = snap.val();
+    const isRecent = Date.now()-t < 120000;
+    setDot('live-dot', isRecent?'green':'yellow');
+    setDot('live-dot2', isRecent?'green':'yellow');
+    document.getElementById('live-label').textContent = isRecent?'Online':'Utolsó ismert pozíció';
+    document.getElementById('live-speed').innerHTML = speed+'<span class="sc-unit">km/h</span>';
+    document.getElementById('live-status').textContent = isRecent?(speed>2?'Mozgásban':'Áll'):'Offline';
+    document.getElementById('live-coords').textContent = 'Koordináta: '+lat.toFixed(5)+', '+lng.toFixed(5)+'\nFrissítve: '+new Date(t).toLocaleTimeString('hu-HU');
     if (!liveMarker) {
-      liveMarker = L.circleMarker([lat,lng],{radius:10,fillColor:'#f7c94f',color:'#fff',weight:2.5,fillOpacity:1,zIndexOffset:1000}).addTo(lmap);
+      liveMarker=L.circleMarker([lat,lng],{radius:11,fillColor:'#f7c94f',color:'#fff',weight:2.5,fillOpacity:1,zIndexOffset:1000}).addTo(lmap);
     } else { liveMarker.setLatLng([lat,lng]); }
-
-    // Auto pan if recent
-    if (isRecent) lmap.panTo([lat,lng], {animate:true, duration:1});
-
-    // Stale timer
+    if (isRecent) lmap.panTo([lat,lng],{animate:true,duration:1});
     clearTimeout(liveTimer);
-    liveTimer = setTimeout(() => {
-      setDot('live-dot','yellow'); setDot('live-dot2','yellow');
-      document.getElementById('live-label').textContent = 'Offline';
-      document.getElementById('live-status').textContent = 'Offline';
-    }, 130000);
+    liveTimer=setTimeout(()=>{ setDot('live-dot','yellow');setDot('live-dot2','yellow');document.getElementById('live-label').textContent='Offline'; },130000);
   });
 }
 
-// ── ROUTES ON MAP ─────────────────────────────────────────────────────────
+// ── ROUTES ────────────────────────────────────────────────────────────────
 function drawAllRoutes() {
   allPolylines.forEach(p=>lmap.removeLayer(p)); allPolylines=[];
-  sessions.forEach(s => {
-    if (s.points?.length > 1) {
-      const pl = L.polyline(s.points.map(p=>[p.lat,p.lng]),{color:'#4f8ef7',weight:3,opacity:.6,lineJoin:'round',lineCap:'round'}).addTo(lmap);
+  sessions.forEach(s=>{
+    if (s.points?.length>1) {
+      const pl=L.polyline(s.points.map(p=>[p.lat,p.lng]),{color:'#4f8ef7',weight:3,opacity:.6,lineJoin:'round',lineCap:'round'}).addTo(lmap);
       allPolylines.push(pl);
     }
   });
   if (allPolylines.length) {
-    const all = sessions.flatMap(s=>s.points||[]).map(p=>[p.lat,p.lng]);
+    const all=sessions.flatMap(s=>s.points||[]).map(p=>[p.lat,p.lng]);
     if (all.length) lmap.fitBounds(L.latLngBounds(all),{padding:[40,40]});
   }
 }
 
 // ── STATS ─────────────────────────────────────────────────────────────────
 function updateStats() {
-  const total = sessions.reduce((a,s)=>a+(s.distKm||0),0);
-  document.getElementById('t-dist').innerHTML = total.toFixed(1)+'<span class="sc-unit">km</span>';
-  document.getElementById('t-sess').textContent = sessions.length;
-  document.getElementById('t-ctry').textContent = Object.keys(countries).length;
-  document.getElementById('t-pts').textContent = sessions.reduce((a,s)=>a+(s.points?.length||0),0);
+  const total=sessions.reduce((a,s)=>a+(s.distKm||0),0);
+  document.getElementById('t-dist').innerHTML=total.toFixed(1)+'<span class="sc-unit">km</span>';
+  document.getElementById('t-sess').textContent=sessions.length;
+  document.getElementById('t-ctry').textContent=Object.keys(countries).length;
+  document.getElementById('t-pts').textContent=sessions.reduce((a,s)=>a+(s.points?.length||0),0);
 }
 
 function renderCountries() {
-  const el = document.getElementById('sec-countries');
-  const codes = Object.keys(countries);
-  if (!codes.length) { el.innerHTML = '<div class="empty">Még nincs ország.</div>'; return; }
-  const flag = c => c.split('').map(x=>String.fromCodePoint(0x1F1E6-65+x.charCodeAt(0))).join('');
-  el.innerHTML = codes.map(c=>`<span class="country-chip"><span>${flag(c)}</span>${countries[c].name}</span>`).join('');
+  const el=document.getElementById('sec-countries');
+  const codes=Object.keys(countries);
+  if (!codes.length){el.innerHTML='<div class="empty">Még nincs ország.</div>';return;}
+  const flag=c=>c.split('').map(x=>String.fromCodePoint(0x1F1E6-65+x.charCodeAt(0))).join('');
+  el.innerHTML=codes.map(c=>`<span class="country-chip"><span>${flag(c)}</span>${countries[c].name}</span>`).join('');
 }
 
 function renderSessions() {
-  const el = document.getElementById('sec-sessions');
-  if (!sessions.length) { el.innerHTML = '<div class="empty">Nincs mentett útvonal.</div>'; return; }
-  el.innerHTML = [...sessions].reverse().map(s => {
-    const d = new Date(s.date);
-    const ds = d.toLocaleDateString('hu-HU')+' '+d.toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
+  const el=document.getElementById('sec-sessions');
+  if (!sessions.length){el.innerHTML='<div class="empty">Nincs mentett útvonal.</div>';return;}
+  el.innerHTML=[...sessions].reverse().map(s=>{
+    const d=new Date(s.date);
+    const ds=d.toLocaleDateString('hu-HU')+' '+d.toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
     return `<div class="si" onclick="focusSess(${s.id})">
-      <div class="si-top"><span class="si-date">${ds}</span></div>
+      <div class="si-date">${ds}</div>
       <div class="si-dist">${(s.distKm||0).toFixed(2)} km · ${s.points?.length||0} pont</div>
     </div>`;
   }).join('');
 }
 
-window.focusSess = function(id) {
-  const s = sessions.find(x=>x.id===id);
+window.focusSess=function(id){
+  const s=sessions.find(x=>x.id===id);
   if (!s?.points?.length) return;
   lmap.fitBounds(L.latLngBounds(s.points.map(p=>[p.lat,p.lng])),{padding:[60,60]});
 }
 
-// ── SECTION TOGGLE ─────────────────────────────────────────────────────────
-const sectionState = {stats:true, countries:true, sessions:true};
-window.toggleSection = function(name) {
-  sectionState[name] = !sectionState[name];
-  document.getElementById('sec-'+name).style.display = sectionState[name] ? '' : 'none';
-  document.getElementById('arr-'+name).textContent = sectionState[name] ? '▾' : '▸';
+const sectionState={stats:true,countries:true,sessions:true};
+window.toggleSection=function(name){
+  sectionState[name]=!sectionState[name];
+  document.getElementById('sec-'+name).style.display=sectionState[name]?'':'none';
+  document.getElementById('arr-'+name).textContent=sectionState[name]?'▾':'▸';
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────
-function setDot(id, cls) {
-  const d = document.getElementById(id);
-  if(d) d.className = 'dot' + (cls ? ' '+cls : '');
-}
+function setDot(id,cls){const d=document.getElementById(id);if(d)d.className='dot'+(cls?' '+cls:'');}
 let toastT;
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800);
-}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);}
 </script>
 </body>
 </html>
