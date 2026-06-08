@@ -183,18 +183,18 @@ onAuthStateChanged(auth, async user => {
       .pathDashLength(0.04)
       .pathDashGap(0.02)
       .pathDashAnimateTime(4000)
-      // Arcs setup (overridden below)
-      .arcsData([])
+      // Travel arcs
+      .arcsData(arcs)
       .arcStartLat('startLat')
       .arcStartLng('startLng')
       .arcEndLat('endLat')
       .arcEndLng('endLng')
-      .arcColor(() => 'rgba(100,170,255,0.55)')
+      .arcColor(() => ['rgba(160,210,255,0.45)','rgba(220,240,255,0.95)'])
       .arcAltitude(0.03)
-      .arcStroke(1.8)
-      .arcDashLength(1)
-      .arcDashGap(0)
-      .arcDashAnimateTime(0)
+      .arcStroke(0.5)
+      .arcDashLength(0.05)
+      .arcDashGap(0.95)
+      .arcDashAnimateTime(2000)
       .arcLabel(() => '')
       // Country borders
       .polygonsData([])
@@ -202,19 +202,7 @@ onAuthStateChanged(auth, async user => {
       .polygonStrokeColor(() => 'rgba(150,190,255,0.3)')
       .polygonAltitude(0.001);
 
-    // Base arcs + needle streak combined
-    const allArcs = [
-      ...arcs.map(a => ({...a, type:'base'})),
-      ...arcs.map(a => ({...a, type:'needle'}))
-    ];
-    globe
-      .arcsData(allArcs)
-      .arcColor(d => d.type==='base' ? 'rgba(100,170,255,0.55)' : 'rgba(255,255,255,0.95)')
-      .arcStroke(d => d.type==='base' ? 1.8 : 0.3)
-      .arcDashLength(d => d.type==='base' ? 1 : 0.06)
-      .arcDashGap(d => d.type==='base' ? 0 : 0.94)
-      .arcDashAnimateTime(d => d.type==='base' ? 0 : 2500)
-      .arcLabel(() => '');
+
 
     // Load country borders
     fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
