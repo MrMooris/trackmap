@@ -183,24 +183,34 @@ onAuthStateChanged(auth, async user => {
       .pathDashLength(0.04)
       .pathDashGap(0.02)
       .pathDashAnimateTime(4000)
-      // Travel arcs
+      // Static base arcs
       .arcsData(arcs)
       .arcStartLat('startLat')
       .arcStartLng('startLng')
       .arcEndLat('endLat')
       .arcEndLng('endLng')
-      .arcColor(() => ['rgba(160,210,255,0.3)','rgba(255,255,255,0.9)'])
+      .arcColor(() => 'rgba(160,210,255,0.4)')
       .arcAltitude(0.03)
-      .arcStroke(0.5)
-      .arcDashLength(0.05)
-      .arcDashGap(0.95)
-      .arcDashAnimateTime(4000)
-      .arcLabel('label')
+      .arcStroke(0.4)
+      .arcDashLength(1)
+      .arcDashGap(0)
+      .arcDashAnimateTime(0)
+      .arcLabel(() => '')
       // Country borders
       .polygonsData([])
       .polygonCapColor(() => 'rgba(0,0,0,0)')
       .polygonStrokeColor(() => 'rgba(150,190,255,0.3)')
       .polygonAltitude(0.001);
+
+    // Animated light streak on arcs (separate layer)
+    globe
+      .arcsData([...arcs, ...arcs.map(a => ({...a, isStreak:true}))])
+      .arcColor(d => d.isStreak ? 'rgba(255,255,255,0.9)' : 'rgba(160,210,255,0.4)')
+      .arcStroke(d => d.isStreak ? 0.8 : 0.4)
+      .arcDashLength(d => d.isStreak ? 0.04 : 1)
+      .arcDashGap(d => d.isStreak ? 0.96 : 0)
+      .arcDashAnimateTime(d => d.isStreak ? 3000 : 0)
+      .arcLabel(() => '');
 
     // Load country borders
     fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
