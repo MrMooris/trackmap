@@ -13,158 +13,246 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-:root{--bg:#1a1a1a;--surface:#242424;--surface2:#2e2e2e;--border:#3a3a3a;--accent:#e0e0e0;--text:#f0f0f0;--muted:#888;}
+:root{
+  --bg:#1a1a1a;--surface:#242424;--surface2:#2e2e2e;--border:#3a3a3a;
+  --accent:#e0e0e0;--text:#f0f0f0;--muted:#888;
+}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+.leaflet-control-attribution{display:none!important;}
 
-/* LOGIN */
+/* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;}
-#login-screen h1{font-family:'Space Mono',monospace;font-size:18px;letter-spacing:2px;color:var(--accent);margin-bottom:8px;}
+#login-screen h1{font-family:'Space Mono',monospace;font-size:20px;letter-spacing:2px;color:var(--accent);margin-bottom:8px;}
 #login-screen p{font-size:13px;color:var(--muted);margin-bottom:32px;}
-.login-field{width:100%;max-width:320px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;}
-.login-field:focus{border-color:var(--accent);}
-.login-btn{width:100%;max-width:320px;padding:13px;border-radius:8px;border:1px solid #666;background:#444;color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer;margin-top:4px;}
-.login-btn:active{opacity:.85;}
-#login-err{color:#aaa;font-size:12px;margin-top:8px;text-align:center;min-height:18px;}
+.lf{width:100%;max-width:340px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:13px 16px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;}
+.lf:focus{border-color:var(--accent);}
+.lb{width:100%;max-width:340px;padding:14px;border-radius:8px;border:1px solid #666;background:#444;color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer;margin-top:4px;}
+#l-err{color:#aaa;font-size:12px;margin-top:10px;text-align:center;min-height:18px;}
 
-/* APP */
-#app{display:none;flex-direction:column;height:100dvh;}
-#topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);z-index:1000;flex-shrink:0;}
-#topbar h1{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;color:var(--accent);}
-.status-row{display:flex;align-items:center;gap:8px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+/* ── SHARED ── */
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block;}
 .dot.green{background:#bbb;box-shadow:0 0 5px #bbb;}
 .dot.yellow{background:#888;animation:blink 1s infinite;}
 .dot.red{background:#666;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-#status-txt{font-size:11px;color:var(--muted);}
-#sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
-#sync-dot.ok{background:#bbb;}
-#sync-dot.err{background:#666;}
-#sync-dot.sync{background:#888;animation:blink .6s infinite;}
-.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer;}
-#map{flex:1;z-index:1;}
-.leaflet-control-attribution{display:none!important;}
-#controls{display:flex;gap:8px;padding:10px 16px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
-.btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;}
-.btn-green{background:#555;color:#fff;}
-.btn-red{background:#333;color:#fff;border:1px solid #555;}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);flex:0 0 auto;padding:10px 14px;}
-.btn:disabled{opacity:.35;pointer-events:none;}
-#panel{background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;max-height:55vh;}
-#tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;}
-#tabs::-webkit-scrollbar{display:none;}
-.tab{flex-shrink:0;flex:1;padding:9px 4px;font-size:10px;text-align:center;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-#panel-body{overflow-y:auto;flex:1;padding:12px 16px;}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.sc{background:var(--surface2);border-radius:8px;padding:9px 12px;border:1px solid var(--border);}
-.sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;}
-.sc-val{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;}
+#sync-dot-m,#sync-dot-d{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block;}
+.sdok{background:#bbb!important;}
+.sderr{background:#666!important;}
+.sdsync{background:#888!important;animation:blink .6s infinite;}
+.sc{background:var(--surface2);border-radius:8px;padding:10px 12px;border:1px solid var(--border);}
+.sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;}
+.sc-val{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;}
 .sc-unit{font-size:10px;color:var(--muted);margin-left:2px;}
-.coords{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:6px;}
-.acc{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;margin-top:4px;background:rgba(255,255,255,.07);color:#999;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .country-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;margin:3px;font-size:12px;}
 .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
-.si{background:var(--surface2);border-radius:8px;padding:9px 12px;margin-bottom:7px;border:1px solid var(--border);cursor:pointer;}
+.si{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:7px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s;}
+.si:hover{border-color:#666;}
 .si-top{display:flex;justify-content:space-between;align-items:center;}
 .si-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);}
 .si-dist{font-size:12px;color:var(--muted);margin-top:2px;}
-.si-del{background:transparent;border:none;color:#666;font-size:15px;cursor:pointer;padding:0 2px;}
-.si-extra{font-size:11px;color:var(--muted);margin-top:2px;}
-#toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.auto-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;background:rgba(255,255,255,.08);color:#ccc;margin-left:6px;}
-/* NOTE MARKER */
-.note-popup{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-width:150px;}
-.note-popup input{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:13px;width:100%;outline:none;padding:4px 0;margin-bottom:8px;}
-.note-popup button{background:#444;border:1px solid #666;color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;margin-right:4px;}
-/* REPLAY */
-#replay-bar{display:none;position:absolute;bottom:180px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;z-index:2000;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);}
-/* ELEVATION */
-#elev-chart{width:100%;height:60px;margin-top:8px;}
-/* WEEK BAR */
+.si-del{background:transparent;border:none;color:#666;font-size:15px;cursor:pointer;padding:0 4px;}
+.si-btns{display:flex;gap:5px;margin-top:5px;}
+.si-btn{background:#333;border:1px solid #555;color:#ccc;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;}
+.si-btn:hover{background:#444;}
+.acc{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;margin-top:4px;background:rgba(255,255,255,.07);color:#999;}
 .week-bar-wrap{display:flex;align-items:flex-end;gap:3px;height:50px;margin:8px 0 4px;}
-.week-bar{flex:1;background:var(--surface2);border-radius:3px 3px 0 0;min-height:2px;transition:height .3s;}
-.week-bar.today{background:#aaa;}
+.week-bar{flex:1;background:var(--surface2);border-radius:3px 3px 0 0;min-height:2px;}
+.week-bar.today{background:#888;}
 .week-labels{display:flex;gap:3px;font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;}
 .week-labels span{flex:1;text-align:center;}
+.auto-badge{padding:1px 7px;border-radius:10px;font-size:10px;background:rgba(255,255,255,.08);color:#ccc;margin-left:6px;}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;padding:3px 8px;border-radius:6px;cursor:pointer;}
+.logout-btn:hover{border-color:#666;color:#ccc;}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.note-popup-inner{background:var(--surface2);border-radius:8px;padding:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-width:180px;}
+.note-popup-inner input{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:13px;width:100%;outline:none;padding:4px 0;margin-bottom:8px;}
+.note-popup-inner button{background:#444;border:1px solid #666;color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;}
+
+/* ── MOBILE LAYOUT ── */
+#mobile-app{display:none;flex-direction:column;height:100dvh;}
+#m-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100;}
+#m-topbar h1{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;color:var(--accent);}
+#m-map{flex:1;z-index:1;}
+#m-controls{display:flex;gap:8px;padding:10px 16px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;}
+.btn-g{background:#555;color:#fff;}
+.btn-r{background:#333;color:#fff;border:1px solid #555;}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--text);flex:0 0 auto;padding:10px 14px;}
+.btn:disabled{opacity:.35;pointer-events:none;}
+#m-panel{background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;max-height:52vh;}
+#m-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;}
+#m-tabs::-webkit-scrollbar{display:none;}
+.mtab{flex-shrink:0;flex:1;padding:8px 4px;font-size:10px;text-align:center;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;border-bottom:2px solid transparent;white-space:nowrap;}
+.mtab.active{color:var(--accent);border-bottom-color:var(--accent);}
+#m-panel-body{overflow-y:auto;flex:1;padding:12px 16px;}
+
+/* ── DESKTOP LAYOUT ── */
+#desktop-app{display:none;flex-direction:column;height:100vh;}
+#d-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+#d-header h1{font-family:'Space Mono',monospace;font-size:15px;letter-spacing:2px;color:var(--accent);}
+.d-hrow{display:flex;align-items:center;gap:12px;}
+#d-main{flex:1;display:flex;overflow:hidden;}
+#d-sidebar{width:320px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+#d-map{flex:1;}
+#d-live-card{padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.d-live-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+#d-coords{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8;}
+#d-sections{flex:1;overflow-y:auto;}
+.d-section{border-bottom:1px solid var(--border);}
+.d-section-title{padding:10px 20px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;cursor:pointer;display:flex;justify-content:space-between;user-select:none;}
+.d-section-title:hover{background:var(--surface2);}
+.d-section-body{padding:0 20px 12px;}
+#d-controls{display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.d-btn{flex:1;padding:9px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
+.d-btn-g{background:#555;color:#fff;}
+.d-btn-r{background:#333;color:#fff;border:1px solid #555;}
+.d-btn-o{background:transparent;border:1px solid var(--border);color:var(--text);flex:0 0 auto;padding:9px 12px;}
+.d-btn:disabled{opacity:.35;pointer-events:none;}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-screen">
   <h1>⬡ TRACKMAP</h1>
   <p>Jelentkezz be a folytatáshoz</p>
-  <input class="login-field" type="email" id="l-email" placeholder="Email cím" autocomplete="email"/>
-  <input class="login-field" type="password" id="l-pass" placeholder="Jelszó" autocomplete="current-password"/>
-  <button class="login-btn" onclick="doLogin()">Belépés</button>
-  <div id="login-err"></div>
+  <input class="lf" type="email" id="l-email" placeholder="Email cím" autocomplete="email"/>
+  <input class="lf" type="password" id="l-pass" placeholder="Jelszó" autocomplete="current-password"/>
+  <button class="lb" onclick="doLogin()">Belépés</button>
+  <div id="l-err"></div>
 </div>
 
-<div id="app">
-  <div id="topbar">
-    <h1>⬡ TRACKMAP <span class="auto-badge" id="auto-badge" style="display:none">AUTO</span></h1>
-    <div class="status-row">
-      <div class="dot" id="gps-dot"></div>
-      <span id="status-txt">GPS inaktív</span>
-      <div id="sync-dot"></div>
+<!-- MOBILE -->
+<div id="mobile-app">
+  <div id="m-topbar">
+    <h1>⬡ TRACKMAP <span class="auto-badge" id="m-auto-badge" style="display:none">AUTO</span></h1>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="dot" id="m-gps-dot"></div>
+      <span style="font-size:11px;color:var(--muted)" id="m-status-txt">GPS inaktív</span>
+      <div id="sync-dot-m"></div>
+      <button class="logout-btn" onclick="doLogout()">Ki</button>
+    </div>
+  </div>
+  <div id="m-map"></div>
+  <div id="m-controls">
+    <button class="btn btn-g" id="m-btn-start" onclick="startTracking()">▶ Start</button>
+    <button class="btn btn-r" id="m-btn-stop" disabled onclick="stopTracking()">■ Stop</button>
+    <button class="btn btn-o" onclick="centerMap()">⊙</button>
+    <button class="btn btn-o" onclick="toggleAuto()" id="m-btn-auto">⟳</button>
+    <button class="btn btn-o" onclick="addNote()">📍</button>
+  </div>
+  <div id="m-panel">
+    <div id="m-tabs">
+      <div class="mtab active" onclick="switchMTab('live')">Élő</div>
+      <div class="mtab" onclick="switchMTab('stats')">Statisztika</div>
+      <div class="mtab" onclick="switchMTab('week')">Heti</div>
+      <div class="mtab" onclick="switchMTab('countries')">Országok</div>
+      <div class="mtab" onclick="switchMTab('sessions')">Útvonalak</div>
+    </div>
+    <div id="m-panel-body">
+      <div id="m-tab-live">
+        <div class="stat-grid">
+          <div class="sc"><div class="sc-label">Sebesség</div><div class="sc-val" id="m-speed">0<span class="sc-unit">km/h</span></div></div>
+          <div class="sc"><div class="sc-label">Távolság</div><div class="sc-val" id="m-dist">0<span class="sc-unit">m</span></div></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:6px" id="m-coords">Koordináták: –</div>
+        <div id="m-acc"></div>
+      </div>
+      <div id="m-tab-stats" style="display:none">
+        <div class="stat-grid">
+          <div class="sc"><div class="sc-label">Összes km</div><div class="sc-val" id="ms-dist">–</div></div>
+          <div class="sc"><div class="sc-label">Útvonalak</div><div class="sc-val" id="ms-sess">–</div></div>
+          <div class="sc"><div class="sc-label">Országok</div><div class="sc-val" id="ms-ctry">–</div></div>
+          <div class="sc"><div class="sc-label">GPS pontok</div><div class="sc-val" id="ms-pts">–</div></div>
+        </div>
+        <div class="stat-grid">
+          <div class="sc"><div class="sc-label">Leghosszabb nap</div><div class="sc-val" id="ms-bestday">–</div><div style="font-size:10px;color:var(--muted);margin-top:2px" id="ms-bestday-d"></div></div>
+          <div class="sc"><div class="sc-label">Átlag sebesség</div><div class="sc-val" id="ms-avgspd">–<span class="sc-unit">km/h</span></div></div>
+        </div>
+      </div>
+      <div id="m-tab-week" style="display:none">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">HETI ÖSSZEFOGLALÓ</div>
+        <div class="week-bar-wrap" id="m-week-bars"></div>
+        <div class="week-labels" id="m-week-labels"></div>
+        <div class="stat-grid" style="margin-top:10px">
+          <div class="sc"><div class="sc-label">Ezen a héten</div><div class="sc-val" id="mw-dist">0<span class="sc-unit">km</span></div></div>
+          <div class="sc"><div class="sc-label">Aktív napok</div><div class="sc-val" id="mw-days">0<span class="sc-unit">nap</span></div></div>
+        </div>
+      </div>
+      <div id="m-tab-countries" style="display:none"><div id="m-countries-list"></div></div>
+      <div id="m-tab-sessions" style="display:none"><div id="m-sessions-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop-app">
+  <div id="d-header">
+    <h1>⬡ TRACKMAP <span class="auto-badge" id="d-auto-badge" style="display:none">AUTO</span></h1>
+    <div class="d-hrow">
+      <div class="dot" id="d-live-dot"></div>
+      <span style="font-size:12px;color:var(--muted)" id="d-live-label">Betöltés…</span>
+      <div id="sync-dot-d"></div>
       <button class="logout-btn" onclick="doLogout()">Kilépés</button>
     </div>
   </div>
-  <div id="map"></div>
-  <div id="controls">
-    <button class="btn btn-green" id="btn-start" onclick="startTracking()">▶ Start</button>
-    <button class="btn btn-red" id="btn-stop" disabled onclick="stopTracking()">■ Stop</button>
-    <button class="btn btn-outline" onclick="centerMap()" title="Helyzet">⊙</button>
-    <button class="btn btn-outline" onclick="toggleAuto()" id="btn-auto" title="Auto">⟳</button>
-    <button class="btn btn-outline" onclick="addNote()" title="Jegyzet">📍</button>
-  </div>
-  <div id="panel">
-    <div id="tabs">
-      <div class="tab active" onclick="switchTab('live')">Élő</div>
-      <div class="tab" onclick="switchTab('stats')">Statisztika</div>
-      <div class="tab" onclick="switchTab('week')">Heti</div>
-      <div class="tab" onclick="switchTab('countries')">Országok</div>
-      <div class="tab" onclick="switchTab('sessions')">Útvonalak</div>
+  <div id="d-main">
+    <div id="d-sidebar">
+      <div id="d-controls">
+        <button class="d-btn d-btn-g" id="d-btn-start" onclick="startTracking()">▶ Start</button>
+        <button class="d-btn d-btn-r" id="d-btn-stop" disabled onclick="stopTracking()">■ Stop</button>
+        <button class="d-btn d-btn-o" onclick="centerMap()">⊙</button>
+        <button class="d-btn d-btn-o" onclick="toggleAuto()" id="d-btn-auto">⟳</button>
+        <button class="d-btn d-btn-o" onclick="addNote()">📍</button>
+      </div>
+      <div id="d-live-card">
+        <div class="d-live-title"><div class="dot" id="d-gps-dot"></div>ÉLŐ POZÍCIÓ</div>
+        <div class="stat-grid">
+          <div class="sc"><div class="sc-label">Sebesség</div><div class="sc-val" id="d-speed">–<span class="sc-unit">km/h</span></div></div>
+          <div class="sc"><div class="sc-label">Távolság</div><div class="sc-val" id="d-dist">–</div></div>
+        </div>
+        <div id="d-coords" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8;">Koordináta: –</div>
+      </div>
+      <div id="d-sections">
+        <div class="d-section">
+          <div class="d-section-title" onclick="toggleDSection('stats')">STATISZTIKA <span id="d-arr-stats">▾</span></div>
+          <div class="d-section-body" id="d-sec-stats">
+            <div class="stat-grid">
+              <div class="sc"><div class="sc-label">Összes km</div><div class="sc-val" id="ds-dist">–</div></div>
+              <div class="sc"><div class="sc-label">Útvonalak</div><div class="sc-val" id="ds-sess">–</div></div>
+              <div class="sc"><div class="sc-label">Országok</div><div class="sc-val" id="ds-ctry">–</div></div>
+              <div class="sc"><div class="sc-label">GPS pontok</div><div class="sc-val" id="ds-pts">–</div></div>
+            </div>
+            <div class="stat-grid">
+              <div class="sc"><div class="sc-label">Leghosszabb nap</div><div class="sc-val" id="ds-bestday">–</div><div style="font-size:10px;color:var(--muted);margin-top:2px" id="ds-bestday-d"></div></div>
+              <div class="sc"><div class="sc-label">Átlag sebesség</div><div class="sc-val" id="ds-avgspd">–<span class="sc-unit">km/h</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="d-section">
+          <div class="d-section-title" onclick="toggleDSection('week')">HETI ÖSSZEFOGLALÓ <span id="d-arr-week">▾</span></div>
+          <div class="d-section-body" id="d-sec-week">
+            <div class="week-bar-wrap" id="d-week-bars"></div>
+            <div class="week-labels" id="d-week-labels"></div>
+            <div class="stat-grid" style="margin-top:8px">
+              <div class="sc"><div class="sc-label">Ezen a héten</div><div class="sc-val" id="dw-dist">0<span class="sc-unit">km</span></div></div>
+              <div class="sc"><div class="sc-label">Aktív napok</div><div class="sc-val" id="dw-days">0<span class="sc-unit">nap</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="d-section">
+          <div class="d-section-title" onclick="toggleDSection('countries')">ORSZÁGOK <span id="d-arr-countries">▾</span></div>
+          <div class="d-section-body" id="d-sec-countries"><div class="empty">Betöltés…</div></div>
+        </div>
+        <div class="d-section">
+          <div class="d-section-title" onclick="toggleDSection('sessions')">ÚTVONALAK <span id="d-arr-sessions">▾</span></div>
+          <div class="d-section-body" id="d-sec-sessions"><div class="empty">Betöltés…</div></div>
+        </div>
+      </div>
     </div>
-    <div id="panel-body">
-      <!-- LIVE -->
-      <div id="tab-live">
-        <div class="stat-grid">
-          <div class="sc"><div class="sc-label">Sebesség</div><div class="sc-val" id="cur-speed">0<span class="sc-unit">km/h</span></div></div>
-          <div class="sc"><div class="sc-label">Távolság</div><div class="sc-val" id="cur-dist">0<span class="sc-unit">m</span></div></div>
-        </div>
-        <div class="coords" id="cur-coords">Koordináták: –</div>
-        <div id="acc-el"></div>
-      </div>
-      <!-- STATS -->
-      <div id="tab-stats" style="display:none">
-        <div class="stat-grid">
-          <div class="sc"><div class="sc-label">Összes km</div><div class="sc-val" id="t-dist">0<span class="sc-unit">km</span></div></div>
-          <div class="sc"><div class="sc-label">Útvonalak</div><div class="sc-val" id="t-sess">0</div></div>
-          <div class="sc"><div class="sc-label">Országok</div><div class="sc-val" id="t-ctry">0</div></div>
-          <div class="sc"><div class="sc-label">GPS pontok</div><div class="sc-val" id="t-pts">0</div></div>
-        </div>
-        <div class="stat-grid">
-          <div class="sc"><div class="sc-label">Leghosszabb nap</div><div class="sc-val" id="t-bestday">–</div><div style="font-size:10px;color:var(--muted);margin-top:2px" id="t-bestday-date"></div></div>
-          <div class="sc"><div class="sc-label">Átlag sebesség</div><div class="sc-val" id="t-avgspeed">–<span class="sc-unit">km/h</span></div></div>
-        </div>
-      </div>
-      <!-- WEEK -->
-      <div id="tab-week" style="display:none">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">HETI ÖSSZEFOGLALÓ</div>
-        <div class="week-bar-wrap" id="week-bars"></div>
-        <div class="week-labels" id="week-labels"></div>
-        <div class="stat-grid" style="margin-top:10px">
-          <div class="sc"><div class="sc-label">Ezen a héten</div><div class="sc-val" id="w-dist">0<span class="sc-unit">km</span></div></div>
-          <div class="sc"><div class="sc-label">Aktív napok</div><div class="sc-val" id="w-days">0<span class="sc-unit">nap</span></div></div>
-        </div>
-      </div>
-      <!-- COUNTRIES -->
-      <div id="tab-countries" style="display:none"><div id="countries-list"></div></div>
-      <!-- SESSIONS -->
-      <div id="tab-sessions" style="display:none"><div id="sessions-list"></div></div>
-    </div>
+    <div id="d-map"></div>
   </div>
 </div>
 
@@ -192,160 +280,190 @@ const fbApp = initializeApp(firebaseConfig);
 const db = getDatabase(fbApp);
 const auth = getAuth(fbApp);
 
-// ── AUTH ──────────────────────────────────────────────────────────────────
-let uid = null;
-
-window.doLogin = async function() {
-  const email = document.getElementById('l-email').value.trim();
-  const pass = document.getElementById('l-pass').value;
-  const errEl = document.getElementById('login-err');
-  if (!email||!pass) { errEl.textContent='Add meg az emailt és jelszót!'; return; }
-  errEl.textContent='';
-  try { await signInWithEmailAndPassword(auth, email, pass); }
-  catch(e) {
-    const msgs={'auth/invalid-credential':'Hibás email vagy jelszó.','auth/wrong-password':'Hibás jelszó.','auth/too-many-requests':'Túl sok próbálkozás.'};
-    errEl.textContent = msgs[e.code]||'Hiba: '+e.message;
-  }
-}
-window.doLogout = async function() { if(watching) stopTracking(true); await signOut(auth); }
-document.getElementById('l-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-
-onAuthStateChanged(auth, user => {
-  if (user) {
-    uid = user.uid;
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='flex';
-    document.getElementById('app').style.flexDirection='column';
-    initMap(); loadFromFirebase();
-  } else {
-    uid=null;
-    document.getElementById('login-screen').style.display='flex';
-    document.getElementById('app').style.display='none';
-  }
-});
+// ── DEVICE DETECT ─────────────────────────────────────────────────────────
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
 
 // ── STATE ─────────────────────────────────────────────────────────────────
-let sessions=[], countries={}, notes=[];
+let uid=null, sessions=[], countries={}, notes=[];
 let watching=false, watchId=null, autoMode=false, autoTimer=null;
 let currentSession=null;
 let lmap=null, currentPolyline, currentMarker, allPolylines=[], noteMarkers=[];
-let activeTab='live', mapInited=false;
-let replayTimer=null;
+let activeMTab='live', replayTimer=null, liveTimer=null;
+const dSectionState={stats:true,week:true,countries:true,sessions:true};
+
+// ── AUTH ──────────────────────────────────────────────────────────────────
+window.doLogin = async function() {
+  const email=document.getElementById('l-email').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  const errEl=document.getElementById('l-err');
+  if(!email||!pass){errEl.textContent='Add meg az emailt és jelszót!';return;}
+  errEl.textContent='';
+  try { await signInWithEmailAndPassword(auth,email,pass); }
+  catch(e) {
+    const msgs={'auth/invalid-credential':'Hibás email vagy jelszó.','auth/wrong-password':'Hibás jelszó.','auth/too-many-requests':'Túl sok próbálkozás.'};
+    errEl.textContent=msgs[e.code]||'Hiba: '+e.message;
+  }
+}
+window.doLogout = async function() { if(watching) stopTracking(true); await signOut(auth); }
+document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    uid=user.id||user.uid;
+    uid=user.uid;
+    document.getElementById('login-screen').style.display='none';
+    if (isMobile) {
+      document.getElementById('mobile-app').style.display='flex';
+      document.getElementById('mobile-app').style.flexDirection='column';
+    } else {
+      document.getElementById('desktop-app').style.display='flex';
+      document.getElementById('desktop-app').style.flexDirection='column';
+    }
+    initMap();
+    loadFromFirebase();
+    if (!isMobile) listenLive();
+  } else {
+    uid=null;
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('mobile-app').style.display='none';
+    document.getElementById('desktop-app').style.display='none';
+  }
+});
 
 // ── MAP ───────────────────────────────────────────────────────────────────
 function initMap() {
-  if (mapInited) return; mapInited=true;
-  lmap = L.map('map',{zoomControl:false,attributionControl:false}).setView([47.5,19.0],7);
+  const mapId=isMobile?'m-map':'d-map';
+  lmap=L.map(mapId,{zoomControl:false,attributionControl:false}).setView([47.5,19.0],7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(lmap);
   L.control.zoom({position:'bottomright'}).addTo(lmap);
   window.lmap=lmap;
 }
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────
-function uRef(p) { return ref(db,`users/${uid}/${p}`); }
+function uRef(p){return ref(db,`users/${uid}/${p}`);}
 
 async function loadFromFirebase() {
   setSyncDot('sync');
   try {
-    const [sSnap,cSnap,nSnap] = await Promise.all([get(uRef('sessions')),get(uRef('countries')),get(uRef('notes'))]);
+    const [sSnap,cSnap,nSnap]=await Promise.all([get(uRef('sessions')),get(uRef('countries')),get(uRef('notes'))]);
     sessions=[];
-    if (sSnap.exists()) { sessions=Object.entries(sSnap.val()).map(([k,v])=>({...v,fbKey:k})); sessions.sort((a,b)=>a.id-b.id); }
-    countries = cSnap.exists()?cSnap.val():{};
-    notes = nSnap.exists()?Object.entries(nSnap.val()).map(([k,v])=>({...v,fbKey:k})):[];
+    if(sSnap.exists()){sessions=Object.entries(sSnap.val()).map(([k,v])=>({...v,fbKey:k}));sessions.sort((a,b)=>a.id-b.id);}
+    countries=cSnap.exists()?cSnap.val():{};
+    notes=nSnap.exists()?Object.entries(nSnap.val()).map(([k,v])=>({...v,fbKey:k})):[];
     setSyncDot('ok');
     loadAllRoutesOnMap();
     loadNotesOnMap();
-    updateStats();
-  } catch(e) { setSyncDot('err'); }
+    updateAll();
+  } catch(e){setSyncDot('err');}
 }
 
 async function saveSession(s) {
-  if (!uid) return; setSyncDot('sync');
-  try { const r=push(uRef('sessions')); await set(r,{id:s.id,date:s.date,points:s.points,distKm:s.distKm,avgSpeed:s.avgSpeed||0}); setSyncDot('ok'); }
-  catch(e) { setSyncDot('err'); }
+  if(!uid)return;setSyncDot('sync');
+  try{const r=push(uRef('sessions'));await set(r,{id:s.id,date:s.date,points:s.points,distKm:s.distKm,avgSpeed:s.avgSpeed||0});setSyncDot('ok');}
+  catch(e){setSyncDot('err');}
 }
-async function saveCountry(code,obj) { if(!uid) return; try { await set(uRef(`countries/${code}`),obj); } catch(e){} }
-async function delSessionFb(fbKey,localId) {
+async function saveCountry(code,obj){if(!uid)return;try{await set(uRef(`countries/${code}`),obj);}catch(e){}}
+async function delSessionFb(fbKey,localId){
   sessions=sessions.filter(s=>s.id!==localId);
-  if(!uid||!fbKey) return;
-  try { await remove(uRef(`sessions/${fbKey}`)); } catch(e){}
+  if(!uid||!fbKey)return;
+  try{await remove(uRef(`sessions/${fbKey}`));}catch(e){}
 }
-async function saveNote(note) {
-  if(!uid) return;
-  try { const r=push(uRef('notes')); await set(r,note); note.fbKey=r.key; } catch(e){}
+async function saveNote(note){if(!uid)return;try{const r=push(uRef('notes'));await set(r,note);note.fbKey=r.key;}catch(e){}}
+async function writeLivePos(lat,lng,speed){
+  if(!uid)return;
+  try{await set(uRef('live'),{lat,lng,speed,t:Date.now()});}catch(e){}
 }
-async function writeLivePos(lat,lng,speed) {
-  if(!uid) return;
-  try { await set(uRef('live'),{lat,lng,speed,t:Date.now()}); } catch(e){}
+
+// ── LIVE LISTENER (desktop) ───────────────────────────────────────────────
+function listenLive(){
+  onValue(uRef('live'),snap=>{
+    if(!snap.exists())return;
+    const {lat,lng,speed,t}=snap.val();
+    const isRecent=Date.now()-t<120000;
+    const dotCls=isRecent?'green':'yellow';
+    setDot('d-live-dot',dotCls);
+    setDot('d-gps-dot',dotCls);
+    document.getElementById('d-live-label').textContent=isRecent?'Online':'Utolsó pozíció';
+    document.getElementById('d-speed').innerHTML=speed+'<span class="sc-unit">km/h</span>';
+    document.getElementById('d-coords').textContent='Koordináta: '+lat.toFixed(5)+', '+lng.toFixed(5)+'\nFrissítve: '+new Date(t).toLocaleTimeString('hu-HU');
+    if(!currentMarker){
+      currentMarker=L.circleMarker([lat,lng],{radius:10,fillColor:'#fff',color:'#555',weight:2.5,fillOpacity:1,zIndexOffset:1000}).addTo(lmap);
+    } else {currentMarker.setLatLng([lat,lng]);}
+    if(isRecent)lmap.panTo([lat,lng],{animate:true,duration:1});
+    clearTimeout(liveTimer);
+    liveTimer=setTimeout(()=>{setDot('d-live-dot','yellow');document.getElementById('d-live-label').textContent='Offline';},130000);
+  });
 }
 
 // ── TRACKING ──────────────────────────────────────────────────────────────
-window.startTracking = function() {
+window.startTracking=function(){
   if(!navigator.geolocation){showToast('GPS nem elérhető');return;}
   watching=true;
   currentSession={id:Date.now(),date:new Date().toISOString(),points:[],distKm:0,speeds:[]};
-  currentPolyline=L.polyline([],{color:'#ffffff',weight:5,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(lmap);
-  document.getElementById('btn-start').disabled=true;
-  document.getElementById('btn-stop').disabled=false;
+  currentPolyline=L.polyline([],{color:'#fff',weight:5,opacity:.9,lineJoin:'round',lineCap:'round'}).addTo(lmap);
+  setBtns(true);
   setGps('yellow','GPS keresés…');
   watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:4000,timeout:15000});
   showToast('Rögzítés elindult');
 }
 
-window.stopTracking = function(silent) {
+window.stopTracking=function(silent){
   if(watchId){navigator.geolocation.clearWatch(watchId);watchId=null;}
   watching=false;
-  document.getElementById('btn-start').disabled=false;
-  document.getElementById('btn-stop').disabled=true;
+  setBtns(false);
   setGps('','GPS inaktív');
-  if(currentSession&&currentSession.points.length>1) {
+  if(currentSession&&currentSession.points.length>1){
     currentSession.distKm=Math.round(calcDist(currentSession.points)*100)/100;
-    // avg speed
-    const speeds=currentSession.speeds.filter(s=>s>0);
-    currentSession.avgSpeed=speeds.length?Math.round(speeds.reduce((a,b)=>a+b,0)/speeds.length):0;
+    const spds=currentSession.speeds.filter(s=>s>0);
+    currentSession.avgSpeed=spds.length?Math.round(spds.reduce((a,b)=>a+b,0)/spds.length):0;
     sessions.push(currentSession);
     saveSession(currentSession);
     if(currentPolyline){lmap.removeLayer(currentPolyline);currentPolyline=null;}
     loadAllRoutesOnMap();
-    updateStats();
-    if(!silent) showToast('Mentve – '+currentSession.distKm+' km');
+    updateAll();
+    if(!silent)showToast('Mentve – '+currentSession.distKm+' km');
   } else {
     if(currentPolyline){lmap.removeLayer(currentPolyline);currentPolyline=null;}
-    if(!silent) showToast('Túl kevés pont');
+    if(!silent)showToast('Túl kevés pont');
   }
   currentSession=null;
 }
 
-function onPos(pos) {
+function onPos(pos){
   const {latitude:lat,longitude:lng,speed,accuracy}=pos.coords;
   setGps('green','GPS aktív');
   writeLivePos(lat,lng,speed?Math.round(speed*3.6):0);
 
-  if(!currentMarker) {
-    currentMarker=L.circleMarker([lat,lng],{radius:9,fillColor:'#fff',color:'#555',weight:2,fillOpacity:1}).addTo(lmap);
-  } else { currentMarker.setLatLng([lat,lng]); }
+  if(isMobile){
+    if(!currentMarker){
+      currentMarker=L.circleMarker([lat,lng],{radius:9,fillColor:'#fff',color:'#555',weight:2,fillOpacity:1}).addTo(lmap);
+    } else {currentMarker.setLatLng([lat,lng]);}
+  }
 
   const spd=speed?Math.round(speed*3.6):0;
-  document.getElementById('cur-speed').innerHTML=spd+'<span class="sc-unit">km/h</span>';
-  document.getElementById('cur-coords').textContent='Koordináták: '+lat.toFixed(5)+', '+lng.toFixed(5);
-  const acc=Math.round(accuracy);
-  const lbl=acc<20?'Kiváló':acc<60?'Közepes':'Gyenge';
-  document.getElementById('acc-el').innerHTML='<span class="acc">±'+acc+'m – '+lbl+'</span>';
+  if(isMobile){
+    document.getElementById('m-speed').innerHTML=spd+'<span class="sc-unit">km/h</span>';
+    document.getElementById('m-coords').textContent='Koordináták: '+lat.toFixed(5)+', '+lng.toFixed(5);
+    const acc=Math.round(accuracy);
+    document.getElementById('m-acc').innerHTML='<span class="acc">±'+acc+'m – '+(acc<20?'Kiváló':acc<60?'Közepes':'Gyenge')+'</span>';
+  }
 
-  if(autoMode&&!watching&&currentSession===null) startTracking();
-  if(!watching||!currentSession) return;
+  if(autoMode&&!watching&&currentSession===null)startTracking();
+  if(!watching||!currentSession)return;
 
   const pts=currentSession.points;
-  if(pts.length>0) {
+  if(pts.length>0){
     const last=pts[pts.length-1];
-    if(haversine(last.lat,last.lng,lat,lng)*1000 < 8) return;
+    if(haversine(last.lat,last.lng,lat,lng)*1000<8)return;
   }
   pts.push({lat,lng,t:Date.now(),alt:pos.coords.altitude||null});
-  if(speed) currentSession.speeds.push(speed*3.6);
+  if(speed)currentSession.speeds.push(speed*3.6);
   currentPolyline.addLatLng([lat,lng]);
   const _d=calcDist(pts);
-  document.getElementById('cur-dist').innerHTML=_d<1?Math.round(_d*1000)+'<span class="sc-unit">m</span>':_d.toFixed(2)+'<span class="sc-unit">km</span>';
-  if((pts.length===1||pts.length%40===0)&&accuracy<=20) fetchCountry(lat,lng);
+  const distStr=_d<1?Math.round(_d*1000)+'<span class="sc-unit">m</span>':_d.toFixed(2)+'<span class="sc-unit">km</span>';
+  if(isMobile)document.getElementById('m-dist').innerHTML=distStr;
+  else document.getElementById('d-dist').innerHTML=distStr;
+  if((pts.length===1||pts.length%40===0)&&accuracy<=20)fetchCountry(lat,lng);
 }
 
 function onErr(){setGps('yellow','GPS hiba');}
@@ -353,13 +471,13 @@ function onErr(){setGps('yellow','GPS hiba');}
 // ── AUTO ──────────────────────────────────────────────────────────────────
 window.toggleAuto=function(){
   autoMode=!autoMode;
-  const btn=document.getElementById('btn-auto');
-  const badge=document.getElementById('auto-badge');
+  const btn=document.getElementById(isMobile?'m-btn-auto':'d-btn-auto');
+  const badge=document.getElementById(isMobile?'m-auto-badge':'d-auto-badge');
   if(autoMode){
     btn.style.color='#bbb';btn.style.borderColor='#bbb';
     badge.style.display='';
     showToast('Auto rögzítés BE');
-    if(!watchId) watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:8000,timeout:20000});
+    if(!watchId)watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:8000,timeout:20000});
     autoTimer=setInterval(()=>{
       if(watching&&currentSession&&currentSession.points.length>2){
         const pts=currentSession.points;
@@ -376,65 +494,55 @@ window.toggleAuto=function(){
 
 // ── NOTES ─────────────────────────────────────────────────────────────────
 window.addNote=function(){
-  if(!currentMarker){showToast('Nincs GPS pozíció');return;}
-  const pos=currentMarker.getLatLng();
-  const popup=L.popup({className:'',closeButton:true})
-    .setLatLng(pos)
-    .setContent(`<div class="note-popup">
+  let pos;
+  if(currentMarker)pos=currentMarker.getLatLng();
+  else pos=lmap.getCenter();
+  L.popup({closeButton:true}).setLatLng(pos).setContent(
+    `<div class="note-popup-inner">
       <div style="font-size:11px;color:#888;margin-bottom:6px">Új jegyzet</div>
       <input id="note-input" placeholder="Írj valamit…" maxlength="80"/>
       <button onclick="saveNoteFromPopup(${pos.lat},${pos.lng})">Mentés</button>
-    </div>`)
-    .openOn(lmap);
+    </div>`
+  ).openOn(lmap);
 }
-
 window.saveNoteFromPopup=function(lat,lng){
   const text=document.getElementById('note-input')?.value?.trim();
-  if(!text) return;
+  if(!text)return;
   const note={lat,lng,text,t:Date.now()};
-  notes.push(note);
-  saveNote(note);
-  lmap.closePopup();
-  addNoteMarker(note);
+  notes.push(note);saveNote(note);lmap.closePopup();addNoteMarker(note);
   showToast('Jegyzet mentve!');
 }
-
 function addNoteMarker(note){
-  const marker=L.marker([note.lat,note.lng],{
-    icon:L.divIcon({className:'',html:'<div style="background:#333;border:1px solid #666;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff">📍</div>',iconSize:[14,14]})
+  const m=L.marker([note.lat,note.lng],{
+    icon:L.divIcon({className:'',html:'<div style="background:#333;border:1px solid #666;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px">📍</div>',iconSize:[16,16]})
   }).addTo(lmap);
-  marker.bindPopup(`<div class="note-popup"><b>${note.text}</b><br><span style="font-size:10px;color:#888">${new Date(note.t).toLocaleDateString('hu-HU')}</span></div>`);
-  noteMarkers.push(marker);
+  m.bindPopup(`<div class="note-popup-inner"><b>${note.text}</b><br><span style="font-size:10px;color:#888">${new Date(note.t).toLocaleDateString('hu-HU')}</span></div>`);
+  noteMarkers.push(m);
 }
-
-function loadNotesOnMap(){
-  noteMarkers.forEach(m=>lmap.removeLayer(m)); noteMarkers=[];
-  notes.forEach(n=>addNoteMarker(n));
-}
+function loadNotesOnMap(){noteMarkers.forEach(m=>lmap.removeLayer(m));noteMarkers=[];notes.forEach(n=>addNoteMarker(n));}
 
 // ── COUNTRY ───────────────────────────────────────────────────────────────
 async function fetchCountry(lat,lng){
-  try {
+  try{
     const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=3`,{headers:{'Accept-Language':'hu'}});
     const j=await r.json();
     const country=j.address?.country,code=j.address?.country_code?.toUpperCase();
     if(country&&code&&!countries[code]){
       countries[code]={name:country,code,firstSeen:new Date().toISOString()};
       saveCountry(code,countries[code]);
-      updateStats();
-      if(activeTab==='countries') renderCountries();
+      updateAll();
       showToast('🌍 Új ország: '+country);
     }
-  } catch(e){}
+  }catch(e){}
 }
 
-// ── MAP ROUTES ────────────────────────────────────────────────────────────
+// ── ROUTES ────────────────────────────────────────────────────────────────
 function loadAllRoutesOnMap(){
-  if(!lmap) return;
-  allPolylines.forEach(p=>lmap.removeLayer(p)); allPolylines=[];
+  if(!lmap)return;
+  allPolylines.forEach(p=>lmap.removeLayer(p));allPolylines=[];
   sessions.forEach(s=>{
     if(s.points?.length>1){
-      const pl=L.polyline(s.points.map(p=>[p.lat,p.lng]),{color:'#ffffff',weight:3,opacity:.85,lineJoin:'round',lineCap:'round'}).addTo(lmap);
+      const pl=L.polyline(s.points.map(p=>[p.lat,p.lng]),{color:'#fff',weight:3,opacity:.85,lineJoin:'round',lineCap:'round'}).addTo(lmap);
       allPolylines.push(pl);
     }
   });
@@ -444,10 +552,9 @@ function loadAllRoutesOnMap(){
 let replayMarker=null;
 window.replaySession=function(id){
   const s=sessions.find(x=>x.id===id);
-  if(!s?.points?.length) return;
-  if(replayTimer){clearInterval(replayTimer);replayTimer=null;if(replayMarker){lmap.removeLayer(replayMarker);replayMarker=null;}return;}
-  const pts=s.points;
-  let i=0;
+  if(!s?.points?.length)return;
+  if(replayTimer){clearInterval(replayTimer);replayTimer=null;if(replayMarker){lmap.removeLayer(replayMarker);replayMarker=null;}showToast('Visszajátszás leállítva');return;}
+  const pts=s.points;let i=0;
   lmap.fitBounds(L.latLngBounds(pts.map(p=>[p.lat,p.lng])),{padding:[40,40]});
   replayMarker=L.circleMarker([pts[0].lat,pts[0].lng],{radius:8,fillColor:'#aaa',color:'#fff',weight:2,fillOpacity:1}).addTo(lmap);
   showToast('▶ Visszajátszás – kattints újra a leállításhoz');
@@ -455,130 +562,158 @@ window.replaySession=function(id){
     i++;
     if(i>=pts.length){clearInterval(replayTimer);replayTimer=null;showToast('Visszajátszás vége');return;}
     replayMarker.setLatLng([pts[i].lat,pts[i].lng]);
-  }, 100);
+  },100);
 }
 
-// ── UI ────────────────────────────────────────────────────────────────────
-window.centerMap=function(){
-  navigator.geolocation.getCurrentPosition(p=>lmap.setView([p.coords.latitude,p.coords.longitude],15),null,{enableHighAccuracy:true,timeout:8000});
-}
-
-window.switchTab=function(name){
-  activeTab=name;
-  ['live','stats','week','countries','sessions'].forEach((t,i)=>{
-    document.querySelectorAll('.tab')[i].classList.toggle('active',t===name);
-    document.getElementById('tab-'+t).style.display=t===name?'':'none';
-  });
-  if(name==='stats') updateStats();
-  if(name==='week') renderWeek();
-  if(name==='countries') renderCountries();
-  if(name==='sessions') renderSessions();
+// ── UPDATE ALL ────────────────────────────────────────────────────────────
+function updateAll(){
+  updateStats();
+  renderWeek();
+  renderCountries();
+  renderSessions();
 }
 
 function updateStats(){
   const total=sessions.reduce((a,s)=>a+(s.distKm||0),0);
-  document.getElementById('t-dist').innerHTML=total.toFixed(1)+'<span class="sc-unit">km</span>';
-  document.getElementById('t-sess').textContent=sessions.length;
-  document.getElementById('t-ctry').textContent=Object.keys(countries).length;
-  document.getElementById('t-pts').textContent=sessions.reduce((a,s)=>a+(s.points?.length||0),0);
-
-  // Best day
+  const totalPts=sessions.reduce((a,s)=>a+(s.points?.length||0),0);
+  const ctry=Object.keys(countries).length;
+  // best day
   const byDay={};
-  sessions.forEach(s=>{
-    const day=s.date?.slice(0,10);
-    if(!day) return;
-    byDay[day]=(byDay[day]||0)+(s.distKm||0);
-  });
+  sessions.forEach(s=>{const day=s.date?.slice(0,10);if(day)byDay[day]=(byDay[day]||0)+(s.distKm||0);});
   const bestDay=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
-  if(bestDay){
-    document.getElementById('t-bestday').innerHTML=bestDay[1].toFixed(1)+'<span class="sc-unit">km</span>';
-    const d=new Date(bestDay[0]);
-    document.getElementById('t-bestday-date').textContent=d.toLocaleDateString('hu-HU');
-  }
+  const bdStr=bestDay?bestDay[1].toFixed(1)+' km':'–';
+  const bdDate=bestDay?new Date(bestDay[0]).toLocaleDateString('hu-HU'):'';
+  // avg speed
+  const spds=sessions.filter(s=>s.avgSpeed>0).map(s=>s.avgSpeed);
+  const avgSpd=spds.length?Math.round(spds.reduce((a,b)=>a+b,0)/spds.length):0;
 
-  // Avg speed
-  const allSpeeds=sessions.filter(s=>s.avgSpeed>0).map(s=>s.avgSpeed);
-  if(allSpeeds.length){
-    const avg=Math.round(allSpeeds.reduce((a,b)=>a+b,0)/allSpeeds.length);
-    document.getElementById('t-avgspeed').innerHTML=avg+'<span class="sc-unit">km/h</span>';
-  }
+  // mobile
+  setEl('ms-dist',total.toFixed(1)+' km');setEl('ms-sess',''+sessions.length);
+  setEl('ms-ctry',''+ctry);setEl('ms-pts',''+totalPts);
+  setEl('ms-bestday',bdStr);setEl('ms-bestday-d',bdDate);
+  setEl('ms-avgspd',avgSpd?avgSpd+' km/h':'–');
+  // desktop
+  setEl('ds-dist',total.toFixed(1)+' km');setEl('ds-sess',''+sessions.length);
+  setEl('ds-ctry',''+ctry);setEl('ds-pts',''+totalPts);
+  setEl('ds-bestday',bdStr);setEl('ds-bestday-d',bdDate);
+  setEl('ds-avgspd',avgSpd?avgSpd+' km/h':'–');
 }
 
 function renderWeek(){
   const days=['H','K','Sz','Cs','P','Sz','V'];
   const today=new Date();
-  const dow=today.getDay(); // 0=sun
-  const mondayOffset=dow===0?-6:1-dow;
-  const weekDays=[];
-  for(let i=0;i<7;i++){
-    const d=new Date(today);
-    d.setDate(today.getDate()+mondayOffset+i);
-    weekDays.push(d.toISOString().slice(0,10));
-  }
+  const dow=today.getDay();
+  const off=dow===0?-6:1-dow;
+  const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(today.getDate()+off+i);return d.toISOString().slice(0,10);});
   const kmByDay=weekDays.map(day=>sessions.filter(s=>s.date?.slice(0,10)===day).reduce((a,s)=>a+(s.distKm||0),0));
   const maxKm=Math.max(...kmByDay,0.1);
   const todayIdx=weekDays.indexOf(today.toISOString().slice(0,10));
   const totalWeek=kmByDay.reduce((a,b)=>a+b,0);
   const activeDays=kmByDay.filter(k=>k>0).length;
-
-  document.getElementById('w-dist').innerHTML=totalWeek.toFixed(1)+'<span class="sc-unit">km</span>';
-  document.getElementById('w-days').innerHTML=activeDays+'<span class="sc-unit">nap</span>';
-
-  document.getElementById('week-bars').innerHTML=kmByDay.map((km,i)=>`
-    <div class="week-bar${i===todayIdx?' today':''}" style="height:${Math.max(4,Math.round(km/maxKm*46))}px" title="${km.toFixed(1)} km"></div>
-  `).join('');
-  document.getElementById('week-labels').innerHTML=days.map(d=>`<span>${d}</span>`).join('');
+  const barsHtml=kmByDay.map((km,i)=>`<div class="week-bar${i===todayIdx?' today':''}" style="height:${Math.max(4,Math.round(km/maxKm*46))}px" title="${km.toFixed(1)} km"></div>`).join('');
+  const labelsHtml=days.map(d=>`<span>${d}</span>`).join('');
+  ['m','d'].forEach(p=>{
+    const bars=document.getElementById(`${p}-week-bars`);
+    const labels=document.getElementById(`${p}-week-labels`);
+    if(bars)bars.innerHTML=barsHtml;
+    if(labels)labels.innerHTML=labelsHtml;
+  });
+  setEl('mw-dist',totalWeek.toFixed(1)+' km');setEl('mw-days',activeDays+' nap');
+  setEl('dw-dist',totalWeek.toFixed(1)+' km');setEl('dw-days',activeDays+' nap');
 }
 
 function renderCountries(){
-  const el=document.getElementById('countries-list');
   const codes=Object.keys(countries);
-  if(!codes.length){el.innerHTML='<div class="empty">Még nincs detektált ország.</div>';return;}
-  const flag=c=>c.split('').map(x=>String.fromCodePoint(0x1F1E6-65+x.charCodeAt(0))).join('');
-  el.innerHTML=codes.map(c=>`<span class="country-chip"><span>${flag(c)}</span>${countries[c].name}</span>`).join('');
+  const html=codes.length?codes.map(c=>{
+    const flag=c.split('').map(x=>String.fromCodePoint(0x1F1E6-65+x.charCodeAt(0))).join('');
+    return `<span class="country-chip"><span>${flag}</span>${countries[c].name}</span>`;
+  }).join(''):'<div class="empty">Még nincs ország.</div>';
+  setEl('m-countries-list',html);
+  setEl('d-sec-countries',html);
 }
 
 function renderSessions(){
-  const el=document.getElementById('sessions-list');
-  if(!sessions.length){el.innerHTML='<div class="empty">Nincs mentett útvonal.</div>';return;}
-  el.innerHTML=[...sessions].reverse().map(s=>{
+  if(!sessions.length){
+    setEl('m-sessions-list','<div class="empty">Nincs mentett útvonal.</div>');
+    setEl('d-sec-sessions','<div class="empty">Nincs mentett útvonal.</div>');
+    return;
+  }
+  const html=[...sessions].reverse().map(s=>{
     const d=new Date(s.date);
     const ds=d.toLocaleDateString('hu-HU')+' '+d.toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
-    const avgSpd=s.avgSpeed?` · ${s.avgSpeed} km/h átlag`:'';
-    // elevation
+    const avgSpd=s.avgSpeed?` · ${s.avgSpeed} km/h`:'';
     const pts=s.points||[];
     const alts=pts.filter(p=>p.alt!=null).map(p=>p.alt);
-    let elevStr='';
-    if(alts.length>1){
-      const gain=alts.reduce((acc,a,i)=>i>0&&a>alts[i-1]?acc+(a-alts[i-1]):acc,0);
-      elevStr=` · +${Math.round(gain)}m`;
-    }
+    const elevStr=alts.length>1?' · +'+Math.round(alts.reduce((acc,a,i)=>i>0&&a>alts[i-1]?acc+(a-alts[i-1]):acc,0))+'m':'';
     return `<div class="si">
       <div class="si-top" onclick="focusSession(${s.id})">
         <span class="si-date">${ds}</span>
         <button class="si-del" onclick="event.stopPropagation();delSession('${s.fbKey}',${s.id})">✕</button>
       </div>
       <div class="si-dist">${(s.distKm||0).toFixed(2)} km${avgSpd}${elevStr}</div>
-      <div class="si-extra" style="display:flex;gap:6px;margin-top:4px">
-        <button onclick="focusSession(${s.id})" style="background:#333;border:1px solid #555;color:#ccc;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer">🗺 Térkép</button>
-        <button onclick="replaySession(${s.id})" style="background:#333;border:1px solid #555;color:#ccc;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer">▶ Visszajátszás</button>
+      <div class="si-btns">
+        <button class="si-btn" onclick="focusSession(${s.id})">🗺 Térkép</button>
+        <button class="si-btn" onclick="replaySession(${s.id})">▶ Visszajátszás</button>
       </div>
     </div>`;
   }).join('');
+  setEl('m-sessions-list',html);
+  setEl('d-sec-sessions',html);
 }
 
+// ── MOBILE TABS ───────────────────────────────────────────────────────────
+window.switchMTab=function(name){
+  activeMTab=name;
+  document.querySelectorAll('.mtab').forEach((t,i)=>{
+    const tabs=['live','stats','week','countries','sessions'];
+    t.classList.toggle('active',tabs[i]===name);
+  });
+  ['live','stats','week','countries','sessions'].forEach(t=>{
+    document.getElementById('m-tab-'+t).style.display=t===name?'':'none';
+  });
+}
+
+// ── DESKTOP SECTIONS ──────────────────────────────────────────────────────
+window.toggleDSection=function(name){
+  dSectionState[name]=!dSectionState[name];
+  document.getElementById('d-sec-'+name).style.display=dSectionState[name]?'':'none';
+  document.getElementById('d-arr-'+name).textContent=dSectionState[name]?'▾':'▸';
+}
+
+// ── SHARED UI ─────────────────────────────────────────────────────────────
+window.centerMap=function(){
+  navigator.geolocation.getCurrentPosition(p=>lmap.setView([p.coords.latitude,p.coords.longitude],15),null,{enableHighAccuracy:true,timeout:8000});
+}
 window.focusSession=function(id){
   const s=sessions.find(x=>x.id===id);
-  if(!s?.points?.length) return;
+  if(!s?.points?.length)return;
   lmap.fitBounds(L.latLngBounds(s.points.map(p=>[p.lat,p.lng])),{padding:[30,30]});
-  switchTab('live');
+  if(isMobile)switchMTab('live');
+}
+window.delSession=function(fbKey,localId){
+  if(!confirm('Törlöd ezt az útvonalat?'))return;
+  delSessionFb(fbKey,localId);
+  loadAllRoutesOnMap();updateAll();
 }
 
-window.delSession=function(fbKey,localId){
-  if(!confirm('Törlöd ezt az útvonalat?')) return;
-  delSessionFb(fbKey,localId);
-  loadAllRoutesOnMap();renderSessions();updateStats();
+function setBtns(recording){
+  ['m','d'].forEach(p=>{
+    const s=document.getElementById(`${p}-btn-start`);
+    const x=document.getElementById(`${p}-btn-stop`);
+    if(s)s.disabled=recording;
+    if(x)x.disabled=!recording;
+  });
 }
+function setGps(cls,txt){
+  setDot('m-gps-dot',cls);setDot('d-gps-dot',cls);
+  setEl('m-status-txt',txt);
+}
+function setDot(id,cls){const d=document.getElementById(id);if(d)d.className='dot'+(cls?' '+cls:'');}
+function setSyncDot(s){
+  const cls=s==='ok'?'sdok':s==='err'?'sderr':s==='sync'?'sdsync':'';
+  ['sync-dot-m','sync-dot-d'].forEach(id=>{const d=document.getElementById(id);if(d)d.className=cls;});
+}
+function setEl(id,html){const el=document.getElementById(id);if(el)el.innerHTML=html;}
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function haversine(la1,lo1,la2,lo2){
@@ -587,15 +722,6 @@ function haversine(la1,lo1,la2,lo2){
   return R*2*Math.asin(Math.sqrt(a));
 }
 function calcDist(pts){let d=0;for(let i=1;i<pts.length;i++)d+=haversine(pts[i-1].lat,pts[i-1].lng,pts[i].lat,pts[i].lng);return d;}
-function setGps(cls,txt){
-  const d=document.getElementById('gps-dot');
-  d.className='dot'+(cls?' '+cls:'');
-  document.getElementById('status-txt').textContent=txt;
-}
-function setSyncDot(s){
-  const d=document.getElementById('sync-dot');
-  d.className=s==='ok'?'ok':s==='err'?'err':s==='sync'?'sync':'';
-}
 let toastT;
 window.showToast=function(msg){
   const t=document.getElementById('toast');
