@@ -128,7 +128,7 @@ onAuthStateChanged(auth, async user => {
         visited: visited.has(code),
         firstSeen: countryData.firstSeen || null,
         lastSeen: countryData.lastSeen || null,
-        size: 0.08,
+        size: visited.has(code) ? 0.25 : 0.08,
         color: visited.has(code) ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.15)',
       };
     });
@@ -140,6 +140,18 @@ onAuthStateChanged(auth, async user => {
         coords: s.points.filter((_,i) => i % 3 === 0).map(p => [p.lat, p.lng]),
         color: ['rgba(136,200,255,0.9)', 'rgba(80,150,255,0.1)']
       }));
+
+    // Travel arcs between countries
+    const arcs = [
+      // Magyarországból
+      {startLat:47.5, startLng:19.0, endLat:51.2, endLng:10.4, label:'HU → DE'},   // HU → DE
+      {startLat:47.5, startLng:19.0, endLat:47.5, endLng:14.5, label:'HU → AT'},   // HU → AT
+      {startLat:47.5, startLng:19.0, endLat:44.0, endLng:21.0, label:'HU → RS'},   // HU → RS
+      // Bécsből Rigába
+      {startLat:47.5, startLng:14.5, endLat:56.9, endLng:24.1, label:'AT → LV'},   // AT → LV
+      // Németből Lengyelbe
+      {startLat:51.2, startLng:10.4, endLat:52.0, endLng:19.0, label:'DE → PL'},   // DE → PL
+    ];
 
     const wrap = document.getElementById('globe-el');
     globe = Globe()(wrap)
@@ -169,6 +181,19 @@ onAuthStateChanged(auth, async user => {
       .pathDashLength(0.04)
       .pathDashGap(0.02)
       .pathDashAnimateTime(4000)
+      // Travel arcs
+      .arcsData(arcs)
+      .arcStartLat('startLat')
+      .arcStartLng('startLng')
+      .arcEndLat('endLat')
+      .arcEndLng('endLng')
+      .arcColor(() => ['rgba(160,210,255,0.9)', 'rgba(80,150,255,0.1)'])
+      .arcAltitude(0.25)
+      .arcStroke(0.8)
+      .arcDashLength(0.4)
+      .arcDashGap(0.2)
+      .arcDashAnimateTime(2000)
+      .arcLabel('label')
       // Country borders
       .polygonsData([])
       .polygonCapColor(() => 'rgba(0,0,0,0)')
