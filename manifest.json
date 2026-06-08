@@ -1,0 +1,17 @@
+{
+  "name": "TrackMap – Útvonalnapló",
+  "short_name": "TrackMap",
+  "description": "Személyes GPS útvonal tracker",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230f1117'/%3E%3Cpath d='M48 144 L80 64 L96 96 L120 48 L144 144' stroke='%234f8ef7' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='96' cy='96' r='8' fill='%23f7c94f'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
