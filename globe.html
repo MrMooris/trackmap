@@ -215,36 +215,50 @@ onAuthStateChanged(auth, async user => {
           .polygonStrokeColor(() => 'rgba(150,190,255,0.25)');
       }).catch(() => {});
 
-    // Animated plane on arcs
-    globe
-      .customLayerData(arcs)
-      .customThreeObject(() => {
-        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-          map: (() => {
-            const c = document.createElement('canvas');
-            c.width=64;c.height=64;
-            const ctx=c.getContext('2d');
-            ctx.font='48px serif';
-            ctx.textAlign='center';
-            ctx.textBaseline='middle';
-            ctx.fillText('✈️',32,32);
-            return new THREE.CanvasTexture(c);
-          })(),
-          depthTest: false,
-        }));
-        sprite.scale.set(2,2,1);
-        return sprite;
-      })
-      .customThreeObjectUpdate((obj, d) => {
-        // Animate along arc
-        const t = (Date.now() % 3000) / 3000;
-        const lat = d.startLat + (d.endLat - d.startLat) * t;
-        const lng = d.startLng + (d.endLng - d.startLng) * t;
-        const alt = 0.08 + Math.sin(Math.PI * t) * 0.15;
-        Object.assign(obj.position, globe.getCoords(lat, lng, alt));
-      });
-
     globe.controls().autoRotate = true;
+
+    // Animate planes along arcs using HTML overlay
+    const planeContainer = document.createElement('div');
+    planeContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;';
+    document.getElementById('globe-wrap').appendChild(planeContainer);
+
+    arcs.forEach((arc, idx) => {
+      const plane = document.createElement('div');
+      plane.style.cssText = 'position:absolute;font-size:16px;transition:none;pointer-events:none;transform:translate(-50%,-50%)';
+      plane.textContent = '✈️';
+      planeContainer.appendChild(plane);
+
+      let progress = (idx / arcs.length); // stagger start
+      setInterval(() => {
+        progress = (progress + 0.003) % 1;
+        const t = progress;
+        const lat = arc.startLat + (arc.endLat - arc.startLat) * t;
+        const lng = arc.startLng + (arc.endLng - arc.startLng) * t;
+        const alt = 0.06 + Math.sin(Math.PI * t) * 0.12;
+        const coords = globe.getCoords(lat, lng, alt);
+        if (!coords) return;
+        // Project 3D to 2D screen
+        const vector = new THREE.Vector3(coords.x, coords.y, coords.z);
+        const canvas = document.querySelector('#globe-el canvas');
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        // Get camera from globe
+        const cam = globe.camera();
+        const proj = vector.clone().project(cam);
+        const x = (proj.x * 0.5 + 0.5) * rect.width;
+        const y = (-proj.y * 0.5 + 0.5) * rect.height;
+        // Hide if behind globe
+        if (proj.z > 1) { plane.style.display='none'; return; }
+        plane.style.display = 'block';
+        plane.style.left = x + 'px';
+        plane.style.top = y + 'px';
+        // Rotate plane based on direction
+        const dx = arc.endLng - arc.startLng;
+        const dy = arc.endLat - arc.startLat;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        plane.style.transform = `translate(-50%,-50%) rotate(${-angle}deg)`;
+      }, 50);
+    });
     globe.controls().autoRotateSpeed = 0.4;
     globe.controls().enableZoom = true;
     globe.pointOfView({lat:47.5, lng:19, altitude:2.2}, 1500);

@@ -133,6 +133,88 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .mem-save{flex:1;background:#1a2a5a;border:1px solid rgba(100,140,255,.4);color:#a0c0ff;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
 .mem-cancel{background:transparent;border:1px solid rgba(100,140,255,.15);color:#4466aa;border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
 </style>
+
+<script>
+// ── SERVICE WORKER ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    console.log('SW registered');
+    // Listen for sync messages
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data?.type === 'SYNC_NOW') {
+        window._syncOfflineQueue && window._syncOfflineQueue();
+      }
+    });
+  }).catch(e => console.warn('SW error:', e));
+}
+
+// ── OFFLINE MODE ──────────────────────────────────────────────────────────
+let isOnline = navigator.onLine;
+let offlineQueue = JSON.parse(localStorage.getItem('tm_offline_queue') || '[]');
+
+window.addEventListener('online', () => {
+  isOnline = true;
+  showToast('🟢 Visszaállt a kapcsolat — szinkronizálás…');
+  updateOnlineStatus();
+  setTimeout(() => syncOfflineQueue(), 1000);
+});
+
+window.addEventListener('offline', () => {
+  isOnline = false;
+  showToast('🔴 Offline mód — adatok lokálisan mentve');
+  updateOnlineStatus();
+});
+
+function updateOnlineStatus() {
+  const dot = document.getElementById('sync-dot-m') || document.getElementById('sync-dot-d');
+  // Update both sync dots
+  ['sync-dot-m','sync-dot-d'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (!isOnline) { el.className='sderr'; el.title='Offline'; }
+    }
+  });
+}
+
+// Queue offline saves
+function queueOffline(type, data) {
+  offlineQueue.push({type, data, t: Date.now()});
+  localStorage.setItem('tm_offline_queue', JSON.stringify(offlineQueue));
+}
+
+// Sync queued data when back online
+window._syncOfflineQueue = async function() {
+  if (!isOnline || !uid || offlineQueue.length === 0) return;
+  const queue = [...offlineQueue];
+  offlineQueue = [];
+  localStorage.setItem('tm_offline_queue', '[]');
+  let synced = 0;
+  for (const item of queue) {
+    try {
+      if (item.type === 'session') {
+        const r = push(uRef('sessions'));
+        await set(r, item.data);
+        synced++;
+      } else if (item.type === 'country') {
+        await set(uRef('countries/' + item.data.code), item.data);
+        synced++;
+      }
+    } catch(e) {
+      // Re-queue failed items
+      offlineQueue.push(item);
+    }
+  }
+  if (synced > 0) {
+    showToast('✅ ' + synced + ' elem szinkronizálva!');
+    localStorage.setItem('tm_offline_queue', JSON.stringify(offlineQueue));
+    loadFromFirebase();
+  }
+}
+
+// Auto sync on load if online
+setTimeout(() => { if (isOnline && uid) syncOfflineQueue(); }, 3000);
+
+</script>
 </head>
 <body>
 
@@ -521,7 +603,10 @@ async function saveSession(s) {
   try{const r=push(uRef('sessions'));await set(r,{id:s.id,date:s.date,points:s.points,distKm:s.distKm,avgSpeed:s.avgSpeed||0});setSyncDot('ok');}
   catch(e){setSyncDot('err');}
 }
-async function saveCountry(code,obj){if(!uid)return;try{await set(uRef(`countries/${code}`),obj);}catch(e){}}
+async function saveCountry(code,obj){
+  if(!uid||!isOnline){queueOffline('country',obj);return;}
+  try{await set(uRef('countries/'+code),obj);}catch(e){queueOffline('country',obj);}
+}
 async function delSessionFb(fbKey,localId){
   sessions=sessions.filter(s=>s.id!==localId);
   if(!uid||!fbKey)return;
