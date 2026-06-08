@@ -14,7 +14,7 @@ body{background:var(--bg);color:var(--accent);font-family:'DM Sans',sans-serif;h
 .back-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block;transition:all .2s;}
 .back-btn:hover{border-color:var(--accent);color:var(--accent);}
 #globe-wrap{flex:1;position:relative;overflow:hidden;}
-canvas{width:100%!important;height:100%!important;display:block;}
+#globe-el{width:100%;height:100%;}
 #info-panel{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 28px;display:flex;gap:32px;backdrop-filter:blur(12px);z-index:10;}
 .info-stat{text-align:center;}
 .info-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-family:'Space Mono',monospace;}
@@ -24,7 +24,6 @@ canvas{width:100%!important;height:100%!important;display:block;}
 #loading p{color:var(--muted);font-size:13px;margin-top:14px;font-family:'Space Mono',monospace;letter-spacing:1px;}
 .spinner{width:36px;height:36px;border:2px solid rgba(100,140,255,.2);border-top-color:#a0c0ff;border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-#hint{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:11px;color:var(--muted);z-index:10;transition:opacity 1s;}
 </style>
 </head>
 <body>
@@ -34,9 +33,7 @@ canvas{width:100%!important;height:100%!important;display:block;}
 </div>
 <div id="globe-wrap">
   <div id="loading"><div class="spinner"></div><p>Betöltés…</p></div>
-  <canvas id="c"></canvas>
-  <div id="tooltip"></div>
-  <div id="hint">🖱 Forgatás: húzás · Zoom: görgetés</div>
+  <div id="globe-el"></div>
   <div id="info-panel">
     <div class="info-stat"><div class="info-label">Országok</div><div class="info-val" id="i-c">–</div></div>
     <div class="info-stat"><div class="info-label">Összes km</div><div class="info-val" id="i-d">–</div></div>
@@ -44,303 +41,121 @@ canvas{width:100%!important;height:100%!important;display:block;}
   </div>
 </div>
 
+<script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
 <script type="module">
-import * as THREE from 'https://unpkg.com/three@0.128.0/build/three.module.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FB = {apiKey:"AIzaSyD2HhTpuw0pex4on-NwGvfODy0vxBVrjBg",authDomain:"trackmap-mooris.firebaseapp.com",databaseURL:"https://trackmap-mooris-default-rtdb.europe-west1.firebasedatabase.app",projectId:"trackmap-mooris",storageBucket:"trackmap-mooris.firebasestorage.app",messagingSenderId:"986771090226",appId:"1:986771090226:web:5e314a22d394a69cd2c52b"};
-const db=getDatabase(initializeApp(FB));
-const auth=getAuth();
+const db = getDatabase(initializeApp(FB));
+const auth = getAuth();
 
-const canvas=document.getElementById('c');
-const wrap=document.getElementById('globe-wrap');
-const W=()=>wrap.clientWidth, H=()=>wrap.clientHeight;
+// Country centers for visited markers
+const COUNTRIES = {
+  HU:{name:'Magyarország',lat:47.5,lng:19},DE:{name:'Németország',lat:51.2,lng:10.4},
+  AT:{name:'Ausztria',lat:47.5,lng:14.5},SK:{name:'Szlovákia',lat:48.7,lng:19.7},
+  RO:{name:'Románia',lat:45.9,lng:24.9},HR:{name:'Horvátország',lat:45.1,lng:15.2},
+  RS:{name:'Szerbia',lat:44,lng:21},SI:{name:'Szlovénia',lat:46.1,lng:14.9},
+  UA:{name:'Ukrajna',lat:48.4,lng:31.2},PL:{name:'Lengyelország',lat:52,lng:19},
+  CZ:{name:'Csehország',lat:49.8,lng:15.5},FR:{name:'Franciaország',lat:46.2,lng:2.2},
+  IT:{name:'Olaszország',lat:41.9,lng:12.6},ES:{name:'Spanyolország',lat:40.4,lng:-3.7},
+  GB:{name:'Egyesült Királyság',lat:51.5,lng:-.1},US:{name:'USA',lat:37.1,lng:-95.7},
+  CN:{name:'Kína',lat:35.9,lng:104.2},JP:{name:'Japán',lat:36.2,lng:138.3},
+  AU:{name:'Ausztrália',lat:-25.3,lng:133.8},BR:{name:'Brazília',lat:-14.2,lng:-51.9},
+  RU:{name:'Oroszország',lat:61.5,lng:90},TR:{name:'Törökország',lat:38.9,lng:35.2},
+  GR:{name:'Görögország',lat:39.1,lng:21.8},NL:{name:'Hollandia',lat:52.1,lng:5.3},
+  BE:{name:'Belgium',lat:50.5,lng:4.5},CH:{name:'Svájc',lat:46.8,lng:8.2},
+  PT:{name:'Portugália',lat:39.4,lng:-8.2},SE:{name:'Svédország',lat:60.1,lng:18.6},
+  NO:{name:'Norvégia',lat:60.5,lng:8.5},DK:{name:'Dánia',lat:56.3,lng:9.5},
+  FI:{name:'Finnország',lat:61.9,lng:25.7},MX:{name:'Mexikó',lat:23.6,lng:-102.6},
+  AR:{name:'Argentína',lat:-38.4,lng:-63.6},ZA:{name:'Dél-Afrika',lat:-30.6,lng:22.9},
+  EG:{name:'Egyiptom',lat:26.8,lng:30.8},IN:{name:'India',lat:20.6,lng:78.9},
+  TH:{name:'Thaiföld',lat:15.9,lng:100.9},KR:{name:'Dél-Korea',lat:35.9,lng:127.8},
+};
 
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-renderer.setSize(W(),H());
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href='index.html'; return; }
 
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(45,W()/H(),.1,1000);
-camera.position.z=2.5;
+  try {
+    const [sSnap, cSnap] = await Promise.all([
+      get(ref(db, `users/${user.uid}/sessions`)),
+      get(ref(db, `users/${user.uid}/countries`))
+    ]);
+    const sessions = sSnap.exists() ? Object.values(sSnap.val()) : [];
+    const countries = cSnap.exists() ? cSnap.val() : {};
+    const visited = new Set(Object.keys(countries));
+    const total = sessions.reduce((a,s) => a+(s.distKm||0), 0);
 
-scene.add(new THREE.AmbientLight(0x223366,3));
-const sun=new THREE.DirectionalLight(0xffffff,2.5);
-sun.position.set(5,3,4);scene.add(sun);
-const rim=new THREE.DirectionalLight(0x2244aa,1);
-rim.position.set(-4,-2,-3);scene.add(rim);
+    document.getElementById('i-c').textContent = visited.size;
+    document.getElementById('i-d').textContent = total.toFixed(0)+' km';
+    document.getElementById('i-s').textContent = sessions.length;
 
-const globeGroup=new THREE.Group();
-scene.add(globeGroup);
+    // Build markers for visited countries
+    const markers = Object.entries(COUNTRIES)
+      .filter(([code]) => visited.has(code))
+      .map(([code, info]) => ({
+        lat: info.lat, lng: info.lng,
+        name: info.name, code,
+        size: 0.15, color: 'rgba(160,200,255,0.9)'
+      }));
 
-// ── PROCEDURAL EARTH (no external textures needed) ────────────────────────
-// Create earth using canvas texture
-function makeEarthTexture(visited) {
-  const size=2048;
-  const cv=document.createElement('canvas');
-  cv.width=size;cv.height=size/2;
-  const ctx=cv.getContext('2d');
+    // Build route paths
+    const paths = sessions
+      .filter(s => s.points && s.points.length > 1)
+      .map(s => ({
+        coords: s.points.filter((_,i)=>i%3===0).map(p => [p.lat, p.lng]),
+        color: ['rgba(136,204,255,0.8)', 'rgba(80,140,255,0.3)']
+      }));
 
-  // Ocean gradient
-  const grad=ctx.createLinearGradient(0,0,0,size/2);
-  grad.addColorStop(0,'#0a1628');
-  grad.addColorStop(.5,'#0d2040');
-  grad.addColorStop(1,'#060e1a');
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,0,size,size/2);
+    // Init Globe
+    const wrap = document.getElementById('globe-el');
+    const globe = Globe()(wrap)
+      .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+      .width(wrap.clientWidth)
+      .height(wrap.clientHeight)
+      .atmosphereColor('rgba(100,150,255,0.3)')
+      .atmosphereAltitude(0.15)
+      // Visited country markers
+      .pointsData(markers)
+      .pointLat('lat')
+      .pointLng('lng')
+      .pointColor('color')
+      .pointRadius("size")
+      .pointAltitude(0.01)
+      .pointLabel(d => `<div style="background:rgba(10,10,30,.9);border:1px solid rgba(100,140,255,.4);border-radius:8px;padding:6px 12px;color:#a0c0ff;font-family:DM Sans;font-size:13px"><b>${d.name}</b> ✓</div>`)
+      // Route paths
+      .pathsData(paths)
+      .pathPoints('coords')
+      .pathPointLat(p => p[0])
+      .pathPointLng(p => p[1])
+      .pathColor('color')
+      .pathStroke(1.5)
+      .pathDashLength(0.05)
+      .pathDashGap(0.02)
+      .pathDashAnimateTime(3000);
 
-  // Simplified continent shapes (approximate polygons in equirectangular projection)
-  ctx.fillStyle='#1a3a2a';
+    // Style
+    globe.controls().autoRotate = true;
+    globe.controls().autoRotateSpeed = 0.5;
+    globe.controls().enableZoom = true;
 
-  // Helper: draw continent from lat/lng bounding boxes
-  function fillRect(lat1,lng1,lat2,lng2,col) {
-    ctx.fillStyle=col||'#1e3d2a';
-    const x1=(lng1+180)/360*size;
-    const y1=(90-lat1)/(180)*(size/2);
-    const x2=(lng2+180)/360*size;
-    const y2=(90-lat2)/(180)*(size/2);
-    ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));
+    // Point to Hungary
+    globe.pointOfView({lat:47.5, lng:19, altitude:2}, 1000);
+
+    document.getElementById('loading').style.display='none';
+
+    // Resize
+    window.addEventListener('resize', () => {
+      globe.width(wrap.clientWidth).height(wrap.clientHeight);
+    });
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loading').style.display='none';
   }
-
-  // Europe
-  fillRect(71,10,35,-10,'#1e3d2a');
-  fillRect(71,10,55,40,'#1e3d2a');
-  fillRect(55,15,35,30,'#1e3d2a');
-  fillRect(45,30,35,45,'#1e3d2a'); // Turkey area
-  // Scandinavia
-  fillRect(71,5,55,32,'#1e3d2a');
-  // UK
-  fillRect(61,-8,50,2,'#1e3d2a');
-  // Iberian
-  fillRect(44,-10,36,4,'#1e3d2a');
-
-  // Africa
-  fillRect(37,-18,10,-18,'#1e3d2a');
-  fillRect(37,-18,-35,52,'#254030');
-  fillRect(10,-18,-35,52,'#254030');
-
-  // Asia
-  fillRect(77,40,10,145,'#1e3d2a');
-  fillRect(50,140,35,145,'#1e3d2a'); // Japan area
-  fillRect(35,125,22,122,'#1e3d2a');
-  // India
-  fillRect(35,68,8,92,'#1e3d2a');
-  // SE Asia
-  fillRect(22,95,-10,145,'#1e3d2a');
-
-  // North America
-  fillRect(72,-170,25,-52,'#1e3d2a');
-  fillRect(25,-120,15,-85,'#1e3d2a');
-
-  // South America
-  fillRect(12,-82,-56,-34,'#254030');
-
-  // Australia
-  fillRect(-10,113,-44,154,'#1e3d2a');
-
-  // Greenland
-  fillRect(83,-75,60,-15,'#e8f0ff');
-
-  // Antarctica
-  fillRect(-65,-180,-90,180,'#e8f0ff');
-
-  // Add some texture/noise for mountain regions
-  ctx.globalAlpha=0.15;
-  for(let i=0;i<800;i++){
-    const x=Math.random()*size,y=Math.random()*(size/2);
-    ctx.fillStyle=Math.random()>.5?'#2a5040':'#0a1a10';
-    ctx.fillRect(x,y,Math.random()*8+2,Math.random()*4+1);
-  }
-  ctx.globalAlpha=1;
-
-  // Grid lines (subtle)
-  ctx.strokeStyle='rgba(100,150,255,0.06)';
-  ctx.lineWidth=1;
-  for(let lat=-80;lat<=80;lat+=20){
-    const y=(90-lat)/(180)*(size/2);
-    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(size,y);ctx.stroke();
-  }
-  for(let lng=-160;lng<=160;lng+=20){
-    const x=(lng+180)/360*size;
-    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,size/2);ctx.stroke();
-  }
-
-  // Highlight visited countries
-  const COUNTRY_BOXES = {
-    HU:{lat1:48.6,lng1:16,lat2:45.7,lng2:22.9},
-    DE:{lat1:55.1,lng1:5.9,lat2:47.3,lng2:15.1},
-    AT:{lat1:49,lng1:9.5,lat2:46.4,lng2:17.2},
-    SK:{lat1:49.6,lng1:16.8,lat2:47.7,lng2:22.6},
-    RO:{lat1:48.3,lng1:20.3,lat2:43.6,lng2:29.7},
-    HR:{lat1:46.6,lng1:13.5,lat2:42.4,lng2:19.5},
-    RS:{lat1:46.2,lng1:18.8,lat2:42.2,lng2:23},
-    SI:{lat1:46.9,lng1:13.4,lat2:45.4,lng2:16.6},
-    UA:{lat1:52.4,lng1:22.1,lat2:44.4,lng2:40.2},
-    PL:{lat1:54.9,lng1:14.1,lat2:49,lng2:24.2},
-    CZ:{lat1:51,lng1:12.1,lat2:48.5,lng2:18.9},
-    FR:{lat1:51.1,lng1:-5.2,lat2:42.3,lng2:8.3},
-    IT:{lat1:47.1,lng1:6.6,lat2:37.9,lng2:18.6},
-    ES:{lat1:43.8,lng1:-9.3,lat2:35.9,lng2:4.3},
-    GB:{lat1:61,lng1:-8,lat2:49.9,lng2:1.8},
-    US:{lat1:49.4,lng1:-125,lat2:24.4,lng2:-66.9},
-    CN:{lat1:53.6,lng1:73.5,lat2:18,lng2:135.1},
-    JP:{lat1:45.5,lng1:129.5,lat2:31,lng2:145.8},
-    AU:{lat1:-10.7,lng1:113.3,lat2:-43.7,lng2:153.6},
-    BR:{lat1:5.3,lng1:-73.9,lat2:-33.7,lng2:-34.8},
-    RU:{lat1:77.7,lng1:26.9,lat2:41.2,lng2:190},
-    TR:{lat1:42.1,lng1:25.7,lat2:35.8,lng2:44.8},
-    GR:{lat1:41.8,lng1:19.6,lat2:34.8,lng2:29.6},
-  };
-
-  visited.forEach(code=>{
-    const box=COUNTRY_BOXES[code];
-    if(!box)return;
-    const x1=(box.lng1+180)/360*size;
-    const y1=(90-box.lat1)/(180)*(size/2);
-    const x2=(box.lng2+180)/360*size;
-    const y2=(90-box.lat2)/(180)*(size/2);
-    const grd=ctx.createRadialGradient(
-      (x1+x2)/2,(y1+y2)/2,0,
-      (x1+x2)/2,(y1+y2)/2,Math.max(Math.abs(x2-x1),Math.abs(y2-y1))/2
-    );
-    grd.addColorStop(0,'rgba(160,200,255,0.5)');
-    grd.addColorStop(1,'rgba(80,140,255,0.1)');
-    ctx.fillStyle=grd;
-    ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));
-
-    // Border
-    ctx.strokeStyle='rgba(180,220,255,0.8)';
-    ctx.lineWidth=2;
-    ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));
-  });
-
-  return new THREE.CanvasTexture(cv);
-}
-
-// Build globe with procedural texture
-let earthMesh;
-function buildGlobe(visited) {
-  if(earthMesh) globeGroup.remove(earthMesh);
-  const tex=makeEarthTexture(visited);
-  const geo=new THREE.SphereGeometry(1,64,64);
-  const mat=new THREE.MeshPhongMaterial({map:tex,specular:new THREE.Color(0x112244),shininess:20});
-  earthMesh=new THREE.Mesh(geo,mat);
-  globeGroup.add(earthMesh);
-}
-
-// Atmosphere
-const atmosGeo=new THREE.SphereGeometry(1.025,64,64);
-const atmosMat=new THREE.MeshPhongMaterial({color:0x2255aa,transparent:true,opacity:.1,side:THREE.FrontSide,depthWrite:false});
-globeGroup.add(new THREE.Mesh(atmosGeo,atmosMat));
-const glowGeo=new THREE.SphereGeometry(1.08,64,64);
-const glowMat=new THREE.MeshPhongMaterial({color:0x113388,transparent:true,opacity:.06,side:THREE.BackSide,depthWrite:false});
-globeGroup.add(new THREE.Mesh(glowGeo,glowMat));
-
-// Stars
-const sGeo=new THREE.BufferGeometry();
-const sPos=[];
-for(let i=0;i<3000;i++){const r=30+Math.random()*70,t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);sPos.push(r*Math.sin(p)*Math.cos(t),r*Math.sin(p)*Math.sin(t),r*Math.cos(p));}
-sGeo.setAttribute('position',new THREE.Float32BufferAttribute(sPos,3));
-scene.add(new THREE.Points(sGeo,new THREE.PointsMaterial({color:0xffffff,size:.06,transparent:true,opacity:.7})));
-
-// ── HELPERS ───────────────────────────────────────────────────────────────
-function ll2v(lat,lng,r=1){
-  const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;
-  return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
-}
-
-// Country label dots
-const COUNTRIES={HU:{name:'Magyarország',lat:47.5,lng:19},DE:{name:'Németország',lat:51.2,lng:10.4},AT:{name:'Ausztria',lat:47.5,lng:14.5},SK:{name:'Szlovákia',lat:48.7,lng:19.7},RO:{name:'Románia',lat:45.9,lng:24.9},HR:{name:'Horvátország',lat:45.1,lng:15.2},RS:{name:'Szerbia',lat:44,lng:21},SI:{name:'Szlovénia',lat:46.1,lng:14.9},UA:{name:'Ukrajna',lat:48.4,lng:31.2},PL:{name:'Lengyelország',lat:52,lng:19},CZ:{name:'Csehország',lat:49.8,lng:15.5},FR:{name:'Franciaország',lat:46.2,lng:2.2},IT:{name:'Olaszország',lat:41.9,lng:12.6},ES:{name:'Spanyolország',lat:40.4,lng:-3.7},GB:{name:'Egyesült Királyság',lat:51.5,lng:-.1},US:{name:'USA',lat:37.1,lng:-95.7},CN:{name:'Kína',lat:35.9,lng:104.2},JP:{name:'Japán',lat:36.2,lng:138.3},AU:{name:'Ausztrália',lat:-25.3,lng:133.8},BR:{name:'Brazília',lat:-14.2,lng:-51.9},RU:{name:'Oroszország',lat:61.5,lng:90},TR:{name:'Törökország',lat:38.9,lng:35.2},GR:{name:'Görögország',lat:39.1,lng:21.8}};
-
-let markerMeshes=[];
-function addMarkers(visited){
-  markerMeshes.forEach(m=>globeGroup.remove(m));markerMeshes=[];
-  Object.entries(COUNTRIES).forEach(([code,info])=>{
-    const v=visited.has(code);
-    const m=new THREE.Mesh(
-      new THREE.SphereGeometry(v?.022:.008,10,10),
-      new THREE.MeshPhongMaterial({color:v?0xa0c8ff:0x1a2a44,emissive:v?0x4488cc:0,shininess:v?100:10})
-    );
-    m.position.copy(ll2v(info.lat,info.lng,1.012));
-    m.userData={name:info.name,visited:v};
-    globeGroup.add(m);markerMeshes.push(m);
-    if(v){
-      const ring=new THREE.Mesh(new THREE.RingGeometry(.028,.04,24),new THREE.MeshBasicMaterial({color:0x88bbff,transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));
-      ring.position.copy(ll2v(info.lat,info.lng,1.013));
-      ring.lookAt(ring.position.clone().multiplyScalar(2));
-      ring.userData={isRing:true};
-      globeGroup.add(ring);markerMeshes.push(ring);
-    }
-  });
-}
-
-function addRoutes(sessions){
-  sessions.forEach(s=>{
-    const pts=(s.points||[]).filter((_,i)=>i%4===0);
-    if(pts.length<2)return;
-    const geo=new THREE.BufferGeometry().setFromPoints(pts.map(p=>ll2v(p.lat,p.lng,1.018)));
-    globeGroup.add(new THREE.Line(geo,new THREE.LineBasicMaterial({color:0x88ccff,transparent:true,opacity:.7,depthWrite:false})));
-  });
-}
-
-// ── INTERACTION ───────────────────────────────────────────────────────────
-let rotX=.4,rotY=1.8,dragging=false,prev={x:0,y:0};
-const tooltip=document.getElementById('tooltip');
-const ray=new THREE.Raycaster();
-const mv=new THREE.Vector2();
-canvas.style.cursor='grab';
-canvas.addEventListener('mousedown',e=>{dragging=true;prev={x:e.clientX,y:e.clientY};canvas.style.cursor='grabbing';});
-window.addEventListener('mouseup',()=>{dragging=false;canvas.style.cursor='grab';});
-canvas.addEventListener('mousemove',e=>{
-  if(dragging){rotY+=(e.clientX-prev.x)*.005;rotX+=(e.clientY-prev.y)*.005;rotX=Math.max(-1.4,Math.min(1.4,rotX));prev={x:e.clientX,y:e.clientY};return;}
-  const rect=canvas.getBoundingClientRect();
-  mv.x=((e.clientX-rect.left)/rect.width)*2-1;mv.y=-((e.clientY-rect.top)/rect.height)*2+1;
-  ray.setFromCamera(mv,camera);
-  const hits=ray.intersectObjects(markerMeshes.filter(m=>m.userData.name));
-  if(hits.length){const d=hits[0].object.userData;tooltip.style.display='block';tooltip.style.left=(e.clientX+14)+'px';tooltip.style.top=(e.clientY-8)+'px';tooltip.innerHTML=`<b>${d.name}</b>${d.visited?' <span style="color:#88ccff">✓</span>':''}`;
-  }else{tooltip.style.display='none';}
-});
-canvas.addEventListener('mouseleave',()=>{tooltip.style.display='none';dragging=false;});
-canvas.addEventListener('wheel',e=>{camera.position.z=Math.max(1.4,Math.min(5,camera.position.z+e.deltaY*.003));});
-let lastT=null;
-canvas.addEventListener('touchstart',e=>{lastT=e.touches[0];},{passive:true});
-canvas.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];rotY+=(t.clientX-lastT.clientX)*.005;rotX+=(t.clientY-lastT.clientY)*.005;rotX=Math.max(-1.4,Math.min(1.4,rotX));lastT=t;},{passive:false});
-
-let autoRot=true;
-canvas.addEventListener('mousedown',()=>{autoRot=false;setTimeout(()=>autoRot=true,8000);});
-setTimeout(()=>{const h=document.getElementById('hint');if(h)h.style.opacity='0';},3000);
-
-let t2=0;
-function animate(){
-  requestAnimationFrame(animate);t2+=.01;
-  if(autoRot)rotY+=.0015;
-  globeGroup.rotation.x=rotX;globeGroup.rotation.y=rotY;
-  markerMeshes.filter(m=>m.userData.isRing).forEach(r=>{r.material.opacity=.3+.2*Math.sin(t2*2);const s=1+.08*Math.sin(t2*2);r.scale.set(s,s,s);});
-  renderer.render(scene,camera);
-}
-animate();
-
-window.addEventListener('resize',()=>{renderer.setSize(W(),H());camera.aspect=W()/H();camera.updateProjectionMatrix();});
-
-// ── FIREBASE ──────────────────────────────────────────────────────────────
-onAuthStateChanged(auth,async user=>{
-  if(!user){window.location.href='index.html';return;}
-  try{
-    const [sSnap,cSnap]=await Promise.all([get(ref(db,`users/${user.uid}/sessions`)),get(ref(db,`users/${user.uid}/countries`))]);
-    const sessions=sSnap.exists()?Object.values(sSnap.val()):[];
-    const countries=cSnap.exists()?cSnap.val():{};
-    const visited=new Set(Object.keys(countries));
-    const total=sessions.reduce((a,s)=>a+(s.distKm||0),0);
-    document.getElementById('i-c').textContent=visited.size;
-    document.getElementById('i-d').textContent=total.toFixed(0)+' km';
-    document.getElementById('i-s').textContent=sessions.length;
-    buildGlobe(visited);
-    addMarkers(visited);
-    addRoutes(sessions);
-  }catch(e){console.error(e);}
-  document.getElementById('loading').style.display='none';
 });
 </script>
 </body>
