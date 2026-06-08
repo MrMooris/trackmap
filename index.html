@@ -224,7 +224,7 @@ function initMap() {
   if (mapInited) return;
   mapInited = true;
   lmap = L.map('map', {zoomControl:false, attributionControl:false}).setView([47.5,19.0],7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(lmap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(lmap);
   L.control.zoom({position:'bottomright'}).addTo(lmap);
   window.lmap = lmap;
 }
@@ -336,7 +336,7 @@ function onPos(pos) {
   }
   pts.push({lat,lng,t:Date.now()});
   currentPolyline.addLatLng([lat,lng]);
-  document.getElementById('cur-dist').innerHTML=calcDist(pts).toFixed(2)+'<span class="sc-unit">km</span>';
+  const _d=calcDist(pts);document.getElementById('cur-dist').innerHTML=_d<1?Math.round(_d*1000)+'<span class="sc-unit">m</span>':_d.toFixed(2)+'<span class="sc-unit">km</span>';
   if (pts.length===1||pts.length%40===0) fetchCountry(lat,lng);
 }
 
@@ -388,7 +388,7 @@ function loadAllRoutesOnMap() {
   allPolylines.forEach(p=>lmap.removeLayer(p)); allPolylines=[];
   sessions.forEach(s=>{
     if (s.points?.length>1) {
-      const pl=L.polyline(s.points.map(p=>[p.lat,p.lng]),{color:'#4f8ef7',weight:3,opacity:.55,lineJoin:'round',lineCap:'round'}).addTo(lmap);
+      const pl=L.polyline(s.points.map(p=>[p.lat,p.lng]),{color:'#ffffff',weight:3,opacity:.85,lineJoin:'round',lineCap:'round'}).addTo(lmap);
       allPolylines.push(pl);
     }
   });
