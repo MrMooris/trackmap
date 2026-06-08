@@ -585,7 +585,7 @@ function uRef(p){return ref(db,`users/${uid}/${p}`);}
 async function loadFromFirebase() {
   setSyncDot('sync');
   // Sync offline queue now that uid is set
-  if (window._pendingSync) { window._pendingSync = false; setTimeout(syncOfflineQueue, 2000); }
+  if (window._pendingSync) { window._pendingSync = false; setTimeout(window._syncOfflineQueue, 2000); }
   try {
     const [sSnap,cSnap,nSnap]=await Promise.all([get(uRef('sessions')),get(uRef('countries')),get(uRef('notes'))]);
     sessions=[];
