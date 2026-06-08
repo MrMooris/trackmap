@@ -136,10 +136,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 
 <script>
 // ── SERVICE WORKER ────────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(reg => {
+if ('serviceWorker' in navigator && !location.hostname.includes('claudeusercontent')) {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
     console.log('SW registered');
-    // Listen for sync messages
     navigator.serviceWorker.addEventListener('message', e => {
       if (e.data?.type === 'SYNC_NOW') {
         window._syncOfflineQueue && window._syncOfflineQueue();
@@ -156,7 +155,7 @@ window.addEventListener('online', () => {
   isOnline = true;
   showToast('🟢 Visszaállt a kapcsolat — szinkronizálás…');
   updateOnlineStatus();
-  setTimeout(() => syncOfflineQueue(), 1000);
+  setTimeout(() => window._syncOfflineQueue && window._syncOfflineQueue(), 1000);
 });
 
 window.addEventListener('offline', () => {
@@ -183,7 +182,7 @@ function queueOffline(type, data) {
 }
 
 // Sync queued data when back online
-window._syncOfflineQueue = async function() {
+window._syncOfflineQueue = async function syncOfflineQueue() {
   if (!isOnline || !uid || offlineQueue.length === 0) return;
   const queue = [...offlineQueue];
   offlineQueue = [];
@@ -211,8 +210,8 @@ window._syncOfflineQueue = async function() {
   }
 }
 
-// Auto sync on load if online
-setTimeout(() => { if (isOnline && uid) syncOfflineQueue(); }, 3000);
+// Auto sync on load if online — uid set after auth
+window._pendingSync = true;
 
 </script>
 </head>
@@ -575,7 +574,7 @@ onAuthStateChanged(auth, user => {
 function initMap() {
   const mapId=isMobile?'m-map':'d-map';
   lmap=L.map(mapId,{zoomControl:false,attributionControl:false}).setView([47.5,19.0],7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(lmap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(lmap);
   L.control.zoom({position:'bottomright'}).addTo(lmap);
   window.lmap=lmap;
 }
@@ -585,6 +584,8 @@ function uRef(p){return ref(db,`users/${uid}/${p}`);}
 
 async function loadFromFirebase() {
   setSyncDot('sync');
+  // Sync offline queue now that uid is set
+  if (window._pendingSync) { window._pendingSync = false; setTimeout(syncOfflineQueue, 2000); }
   try {
     const [sSnap,cSnap,nSnap]=await Promise.all([get(uRef('sessions')),get(uRef('countries')),get(uRef('notes'))]);
     sessions=[];
