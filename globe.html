@@ -190,7 +190,7 @@ onAuthStateChanged(auth, async user => {
       .arcEndLat('endLat')
       .arcEndLng('endLng')
       .arcColor(() => 'rgba(160,210,255,0.55)')
-      .arcAltitude(0.06)
+      .arcAltitude(0.03)
       .arcStroke(0.5)
       .arcDashLength(1)
       .arcDashGap(0)
@@ -234,7 +234,7 @@ onAuthStateChanged(auth, async user => {
         const t = progress;
         const lat = arc.startLat + (arc.endLat - arc.startLat) * t;
         const lng = arc.startLng + (arc.endLng - arc.startLng) * t;
-        const alt = 0.06 + Math.sin(Math.PI * t) * 0.12;
+        const alt = 0.04 + Math.sin(Math.PI * t) * 0.062;
         const coords = globe.getCoords(lat, lng, alt);
         if (!coords) return;
         // Project 3D to 2D screen
