@@ -50,7 +50,7 @@ self.addEventListener('fetch', e => {
     fetch(e.request)
       .then(response => {
         // Cache successful GET responses
-        if (e.request.method === 'GET' && response.status === 200 && e.request.url.startsWith('http')) {
+        if (e.request.method === 'GET' && response.status === 200 && (e.request.url.startsWith('https://') || e.request.url.startsWith('http://'))) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
