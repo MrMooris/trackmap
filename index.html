@@ -111,6 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
 .d-btn-o{background:transparent;border:1px solid var(--border);color:var(--text);flex:0 0 auto;padding:9px 12px;}
 .d-btn:disabled{opacity:.35;pointer-events:none;}
 
+
 /* ── MEMORY MODAL ── */
 #memory-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
 #memory-modal.open{display:flex;}
@@ -203,7 +204,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
         </div>
       </div>
       <div id="m-tab-countries" style="display:none"><div id="m-countries-list"></div></div>
-      <div id="m-tab-sessions" style="display:none"><div id="m-sessions-list"></div></div>
+      <div id="m-tab-sessions" style="display:none">
+        <button onclick="exportAll()" style="width:100%;background:#0f0f28;border:1px solid rgba(100,140,255,.3);color:#6688cc;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif">⬇ Összes letöltése (GPX + JSON)</button>
+        <div id="m-sessions-list"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -268,7 +272,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;hei
           <div class="d-section-body" id="d-sec-countries"><div class="empty">Betöltés…</div></div>
         </div>
         <div class="d-section">
-          <div class="d-section-title" onclick="toggleDSection('sessions')">ÚTVONALAK <span id="d-arr-sessions">▾</span></div>
+          <div class="d-section-title" onclick="toggleDSection('sessions')" style="display:flex;justify-content:space-between;align-items:center">
+            <span>ÚTVONALAK <span id="d-arr-sessions">▾</span></span>
+            <button onclick="event.stopPropagation();exportAll()" style="background:#0f0f28;border:1px solid rgba(100,140,255,.3);color:#6688cc;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">⬇ Export</button>
+          </div>
           <div class="d-section-body" id="d-sec-sessions"><div class="empty">Betöltés…</div></div>
         </div>
       </div>
@@ -343,6 +350,72 @@ document.getElementById('memory-modal').addEventListener('click', function(e) {
   if (e.target === this) closeMemory();
 });
 
+
+
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+window.exportAll = function() {
+  // JSON export
+  const data = {
+    exportDate: new Date().toISOString(),
+    totalSessions: sessions.length,
+    totalDistKm: sessions.reduce((a,s)=>a+(s.distKm||0),0).toFixed(2),
+    countries: Object.values(countries),
+    sessions: sessions.map(s => ({
+      id: s.id,
+      date: s.date,
+      distKm: s.distKm,
+      avgSpeed: s.avgSpeed,
+      places: s.places || [],
+      weather: s.weather || [],
+      pointCount: s.points?.length || 0,
+      points: s.points || []
+    }))
+  };
+  const jsonBlob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  downloadBlob(jsonBlob, 'trackmap_export_' + new Date().toISOString().slice(0,10) + '.json');
+
+  // GPX export
+  const gpx = buildGPX(sessions);
+  const gpxBlob = new Blob([gpx], {type:'application/gpx+xml'});
+  setTimeout(() => downloadBlob(gpxBlob, 'trackmap_routes_' + new Date().toISOString().slice(0,10) + '.gpx'), 500);
+
+  showToast('Export letöltés megkezdve!');
+}
+
+window.exportSession = function(id) {
+  const s = sessions.find(x => x.id === id);
+  if (!s) return;
+  const gpx = buildGPX([s]);
+  const blob = new Blob([gpx], {type:'application/gpx+xml'});
+  const d = new Date(s.date).toISOString().slice(0,10);
+  downloadBlob(blob, 'trackmap_' + d + '.gpx');
+  showToast('GPX letöltve!');
+}
+
+function buildGPX(sessions) {
+  const tracks = sessions.map(s => {
+    const pts = (s.points||[]).map(p =>
+      `<trkpt lat="${p.lat}" lon="${p.lng}"><time>${new Date(p.t).toISOString()}</time>${p.alt?'<ele>'+p.alt+'</ele>':''}</trkpt>`
+    ).join('\n');
+    return `<trk><name>${new Date(s.date).toLocaleDateString('hu-HU')} – ${s.distKm||0} km</name><trkseg>${pts}</trkseg></trk>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="TrackMap" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>TrackMap Export</name><time>${new Date().toISOString()}</time></metadata>
+  ${tracks}
+</gpx>`;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -350,6 +423,7 @@ import { getDatabase, ref, set, get, push, remove, onValue }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyD2HhTpuw0pex4on-NwGvfODy0vxBVrjBg",
@@ -556,6 +630,8 @@ function onPos(pos){
   else document.getElementById('d-dist').innerHTML=distStr;
   // Fetch location with strict accuracy check (handled inside fetchLocation)
   fetchLocation(lat, lng, accuracy);
+  // Fetch weather every ~5 minutes (every 150 points)
+  if (currentSession && pts.length % 150 === 1 && accuracy <= 50) fetchWeather(lat, lng);
 }
 
 function onErr(){setGps('yellow','GPS hiba');}
@@ -675,6 +751,37 @@ async function fetchLocation(lat, lng, accuracy) {
   } catch(e) {}
 }
 
+// ── WEATHER ──────────────────────────────────────────────────────────────
+async function fetchWeather(lat, lng) {
+  try {
+    const r = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto`
+    );
+    const j = await r.json();
+    if (!j.current) return;
+    const temp = j.current.temperature_2m;
+    const wind = j.current.windspeed_10m;
+    const code = j.current.weathercode;
+    const icon = weatherIcon(code);
+    if (currentSession) {
+      if (!currentSession.weather) currentSession.weather = [];
+      currentSession.weather.push({temp, wind, icon, t: new Date().toISOString()});
+    }
+  } catch(e) {}
+}
+function weatherIcon(code) {
+  if (code === 0) return '☀️';
+  if (code <= 2) return '⛅';
+  if (code <= 3) return '☁️';
+  if (code <= 49) return '🌫️';
+  if (code <= 59) return '🌦️';
+  if (code <= 69) return '🌧️';
+  if (code <= 79) return '❄️';
+  if (code <= 84) return '🌨️';
+  if (code <= 99) return '⛈️';
+  return '🌡️';
+}
+
 // ── ROUTES ────────────────────────────────────────────────────────────────
 function loadAllRoutesOnMap(){
   if(!lmap)return;
@@ -781,6 +888,7 @@ function renderSessions(){
     const d=new Date(s.date);
     const ds=d.toLocaleDateString('hu-HU')+' '+d.toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
     const avgSpd=s.avgSpeed?` · ${s.avgSpeed} km/h`:'';
+    const weatherStr=(s.weather&&s.weather.length)?s.weather.map(w=>w.icon+' '+w.temp+'°C').join(' → '):'';
     const placesHtml=(s.places&&s.places.length)?
       (function(){
         const OCC={'couple':'💑','special':'💍','family':'👨‍👩‍👧','friends':'👫','party':'🎉','travel':'✈️','food':'🍽️','nature':'🌿','sport':'⚽','work':'💼','first':'🥇','other':'📌'};
@@ -808,11 +916,14 @@ function renderSessions(){
         <span class="si-date">${ds}</span>
         <button class="si-del" onclick="event.stopPropagation();delSession('${s.fbKey}',${s.id})">✕</button>
       </div>
-      <div class="si-dist">${(s.distKm||0).toFixed(2)} km${avgSpd}${elevStr}</div>${placesHtml}
+      <div class="si-dist">${(s.distKm||0).toFixed(2)} km${avgSpd}${elevStr}</div>
+      ${weatherStr?'<div style="font-size:11px;color:#4466aa;margin-top:2px">'+weatherStr+'</div>':''}${placesHtml}
       <div class="si-btns">
         <button class="si-btn" onclick="focusSession(${s.id})">🗺 Térkép</button>
         <button class="si-btn" onclick="replaySession(${s.id})">▶ Visszajátszás</button>
+        <button class="si-btn" onclick="exportSession(${s.id})">⬇ GPX</button>
       </div>
+
     </div>`;
   }).join('');
   setEl('m-sessions-list',html);
@@ -887,6 +998,8 @@ window.showToast=function(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);
 }
 </script>
+
+
 
 <!-- MEMORY MODAL -->
 <div id="memory-modal">
