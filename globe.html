@@ -217,47 +217,54 @@ onAuthStateChanged(auth, async user => {
 
     globe.controls().autoRotate = true;
 
-    // Animate planes along arcs using HTML overlay
-    const planeContainer = document.createElement('div');
-    planeContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;';
-    document.getElementById('globe-wrap').appendChild(planeContainer);
+    // Animate planes — no THREE dependency
+    globe.onGlobeReady(() => {
+      const planeContainer = document.createElement('div');
+      planeContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;';
+      document.getElementById('globe-wrap').appendChild(planeContainer);
 
-    arcs.forEach((arc, idx) => {
-      const plane = document.createElement('div');
-      plane.style.cssText = 'position:absolute;font-size:16px;transition:none;pointer-events:none;transform:translate(-50%,-50%)';
-      plane.textContent = '✈️';
-      planeContainer.appendChild(plane);
-
-      let progress = (idx / arcs.length); // stagger start
-      setInterval(() => {
-        progress = (progress + 0.003) % 1;
-        const t = progress;
-        const lat = arc.startLat + (arc.endLat - arc.startLat) * t;
-        const lng = arc.startLng + (arc.endLng - arc.startLng) * t;
-        const alt = 0.04 + Math.sin(Math.PI * t) * 0.062;
-        const coords = globe.getCoords(lat, lng, alt);
-        if (!coords) return;
-        // Project 3D to 2D screen
-        const vector = new THREE.Vector3(coords.x, coords.y, coords.z);
-        const canvas = document.querySelector('#globe-el canvas');
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        // Get camera from globe
-        const cam = globe.camera();
-        const proj = vector.clone().project(cam);
-        const x = (proj.x * 0.5 + 0.5) * rect.width;
-        const y = (-proj.y * 0.5 + 0.5) * rect.height;
-        // Hide if behind globe
-        if (proj.z > 1) { plane.style.display='none'; return; }
-        plane.style.display = 'block';
-        plane.style.left = x + 'px';
-        plane.style.top = y + 'px';
-        // Rotate plane based on direction
-        const dx = arc.endLng - arc.startLng;
-        const dy = arc.endLat - arc.startLat;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        plane.style.transform = `translate(-50%,-50%) rotate(${-angle}deg)`;
-      }, 50);
+      arcs.forEach((arc, idx) => {
+        const plane = document.createElement('div');
+        plane.style.cssText = 'position:absolute;font-size:16px;pointer-events:none;visibility:hidden;';
+        plane.textContent = '✈️';
+        planeContainer.appendChild(plane);
+        let t = idx / arcs.length;
+        setInterval(() => {
+          t = (t + 0.003) % 1;
+          const lat = arc.startLat + (arc.endLat - arc.startLat) * t;
+          const lng = arc.startLng + (arc.endLng - arc.startLng) * t;
+          try {
+            const cam = globe.camera();
+            const R = 100;
+            const alt = 1 + 0.04 + Math.sin(Math.PI * t) * 0.06;
+            const r = R * alt;
+            const phi = (90 - lat) * Math.PI / 180;
+            const theta = (lng + 180) * Math.PI / 180;
+            const x3 = -r * Math.sin(phi) * Math.cos(theta);
+            const y3 = r * Math.cos(phi);
+            const z3 = r * Math.sin(phi) * Math.sin(theta);
+            const vm = cam.matrixWorldInverse.elements;
+            const pm = cam.projectionMatrix.elements;
+            const wx = vm[0]*x3+vm[4]*y3+vm[8]*z3+vm[12];
+            const wy = vm[1]*x3+vm[5]*y3+vm[9]*z3+vm[13];
+            const wz = vm[2]*x3+vm[6]*y3+vm[10]*z3+vm[14];
+            const cx = pm[0]*wx+pm[8]*wz;
+            const cy = pm[5]*wy+pm[9]*wz;
+            const cw = -wz;
+            if (cw <= 0) { plane.style.visibility='hidden'; return; }
+            const ndcX = cx/cw, ndcY = cy/cw;
+            if (Math.abs(ndcX)>1.1||Math.abs(ndcY)>1.1) { plane.style.visibility='hidden'; return; }
+            const canvas = globe.renderer().domElement;
+            const scrX = (ndcX*0.5+0.5)*canvas.clientWidth;
+            const scrY = (-ndcY*0.5+0.5)*canvas.clientHeight;
+            const angle = Math.atan2(-(arc.endLat-arc.startLat), arc.endLng-arc.startLng)*180/Math.PI;
+            plane.style.visibility='visible';
+            plane.style.left=scrX+'px';
+            plane.style.top=scrY+'px';
+            plane.style.transform=`translate(-50%,-50%) rotate(${angle}deg)`;
+          } catch(e) {}
+        }, 60);
+      });
     });
     globe.controls().autoRotateSpeed = 0.4;
     globe.controls().enableZoom = true;
