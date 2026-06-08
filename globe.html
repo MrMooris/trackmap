@@ -192,9 +192,9 @@ onAuthStateChanged(auth, async user => {
       .arcColor(() => 'rgba(160,210,255,0.55)')
       .arcAltitude(0.03)
       .arcStroke(0.5)
-      .arcDashLength(1)
-      .arcDashGap(0)
-      .arcDashAnimateTime(0)
+      .arcDashLength(0.15)
+      .arcDashGap(0.85)
+      .arcDashAnimateTime(3000)
       .arcLabel('label')
       // Country borders
       .polygonsData([])
@@ -217,44 +217,7 @@ onAuthStateChanged(auth, async user => {
 
     globe.controls().autoRotate = true;
 
-    // Animate planes using globe.js toScreenCoords
-    globe.onGlobeReady(() => {
-      const planeContainer = document.createElement('div');
-      planeContainer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;';
-      document.getElementById('globe-wrap').appendChild(planeContainer);
-
-      arcs.forEach((arc, idx) => {
-        const plane = document.createElement('div');
-        plane.style.cssText = 'position:absolute;font-size:16px;pointer-events:none;visibility:hidden;';
-        plane.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(160,210,255,0.9)"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
-        planeContainer.appendChild(plane);
-        let t = idx / arcs.length;
-
-        setInterval(() => {
-          t = (t + 0.003) % 1;
-          const lat = arc.startLat + (arc.endLat - arc.startLat) * t;
-          const lng = arc.startLng + (arc.endLng - arc.startLng) * t;
-          try {
-            // Use globe's toScreenCoords if available
-            const screenCoords = globe.toScreenCoords ? globe.toScreenCoords(lat, lng, 0.05) : null;
-            if (screenCoords) {
-              const {x, y} = screenCoords;
-              const wrap = document.getElementById('globe-wrap');
-              if (x < 0 || y < 0 || x > wrap.clientWidth || y > wrap.clientHeight) {
-                plane.style.visibility = 'hidden'; return;
-              }
-              const angle = Math.atan2(-(arc.endLat-arc.startLat), arc.endLng-arc.startLng)*180/Math.PI;
-              plane.style.visibility = 'visible';
-              plane.style.left = x + 'px';
-              plane.style.top = y + 'px';
-              plane.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
-            } else {
-              plane.style.visibility = 'hidden';
-            }
-          } catch(e) { plane.style.visibility = 'hidden'; }
-        }, 60);
-      });
-    });
+    // Plane animation removed - arcs show travel routes clearly
     globe.controls().autoRotateSpeed = 0.4;
     globe.controls().enableZoom = true;
     globe.pointOfView({lat:47.5, lng:19, altitude:2.2}, 1500);
