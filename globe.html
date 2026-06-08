@@ -183,18 +183,21 @@ onAuthStateChanged(auth, async user => {
       .pathDashLength(0.04)
       .pathDashGap(0.02)
       .pathDashAnimateTime(4000)
-      // Travel arcs
-      .arcsData(arcs)
+      // Travel arcs — base + needle combined
+      .arcsData([
+        ...arcs.map(a => ({...a, t:'base'})),
+        ...arcs.map(a => ({...a, t:'needle'}))
+      ])
       .arcStartLat('startLat')
       .arcStartLng('startLng')
       .arcEndLat('endLat')
       .arcEndLng('endLng')
-      .arcColor(() => ['rgba(160,210,255,0.45)','rgba(220,240,255,0.95)'])
+      .arcColor(d => d.t==='base' ? 'rgba(120,180,255,0.5)' : 'rgba(220,240,255,0.95)')
       .arcAltitude(0.03)
-      .arcStroke(0.5)
-      .arcDashLength(0.05)
-      .arcDashGap(0.95)
-      .arcDashAnimateTime(2000)
+      .arcStroke(d => d.t==='base' ? 0.5 : 0.25)
+      .arcDashLength(d => d.t==='base' ? 1 : 0.04)
+      .arcDashGap(d => d.t==='base' ? 0 : 0.96)
+      .arcDashAnimateTime(d => d.t==='base' ? 0 : 2500)
       .arcLabel(() => '')
       // Country borders
       .polygonsData([])
