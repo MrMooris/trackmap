@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--accent);font-family:'DM Sans',sans-serif;h
 <body>
 <div id="header">
   <h1>⬡ TRACKMAP — VILÁG</h1>
-  <a href="index.html" class="back-btn">← Vissza</a>
+  <div style="display:flex;gap:8px;align-items:center"><button id="rot-btn" onclick="toggleRotation()" style="background:transparent;border:1px solid rgba(100,140,255,.2);color:#4466aa;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:DM Sans,sans-serif;transition:all .2s">⏸ Auto forgás</button><a href="index.html" class="back-btn">← Vissza</a></div>
 </div>
 <div id="globe-wrap">
   <div id="loading"><div class="spinner"></div><p>Betöltés…</p></div>
@@ -41,7 +41,17 @@ body{background:var(--bg);color:var(--accent);font-family:'DM Sans',sans-serif;h
   </div>
 </div>
 
-<script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+<script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js">let rotating = true;
+window.toggleRotation = function(){
+  rotating = !rotating;
+  if(window._globe){
+    window._globe.controls().autoRotate = rotating;
+    document.getElementById("rot-btn").textContent = rotating ? "⏸ Auto forgás" : "▶ Auto forgás";
+    document.getElementById("rot-btn").style.color = rotating ? "#4466aa" : "#a0c0ff";
+    document.getElementById("rot-btn").style.borderColor = rotating ? "rgba(100,140,255,.2)" : "rgba(100,140,255,.5)";
+  }
+}
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -112,6 +122,7 @@ onAuthStateChanged(auth, async user => {
     const wrap = document.getElementById('globe-el');
     const globe = Globe()(wrap)
       .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+      .rendererConfig({antialias:true,precision:'highp'})
       .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
       .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
       .width(wrap.clientWidth)
@@ -139,6 +150,7 @@ onAuthStateChanged(auth, async user => {
 
     // Style
     globe.controls().autoRotate = true;
+    window._globe = globe;
     globe.controls().autoRotateSpeed = 0.5;
     globe.controls().enableZoom = true;
 
@@ -157,6 +169,16 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('loading').style.display='none';
   }
 });
+let rotating = true;
+window.toggleRotation = function(){
+  rotating = !rotating;
+  if(window._globe){
+    window._globe.controls().autoRotate = rotating;
+    document.getElementById("rot-btn").textContent = rotating ? "⏸ Auto forgás" : "▶ Auto forgás";
+    document.getElementById("rot-btn").style.color = rotating ? "#4466aa" : "#a0c0ff";
+    document.getElementById("rot-btn").style.borderColor = rotating ? "rgba(100,140,255,.2)" : "rgba(100,140,255,.5)";
+  }
+}
 </script>
 </body>
 </html>
