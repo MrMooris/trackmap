@@ -185,19 +185,19 @@ onAuthStateChanged(auth, async user => {
       .pathDashAnimateTime(4000)
       // Travel arcs — base + needle combined
       .arcsData([
-        ...arcs.map(a => ({...a, t:'base'})),
-        ...arcs.map(a => ({...a, t:'needle'}))
+        ...arcs.map(a => ({...a, layer:'base'})),
+        ...arcs.map(a => ({...a, layer:'needle'}))
       ])
       .arcStartLat('startLat')
       .arcStartLng('startLng')
       .arcEndLat('endLat')
       .arcEndLng('endLng')
-      .arcColor(d => d.t==='base' ? 'rgba(120,180,255,0.5)' : 'rgba(220,240,255,0.95)')
+      .arcColor(d => d.layer==='base' ? 'rgba(120,180,255,0.5)' : 'rgba(220,240,255,0.95)')
       .arcAltitude(0.03)
-      .arcStroke(d => d.t==='base' ? 0.5 : 0.25)
-      .arcDashLength(d => d.t==='base' ? 1 : 0.04)
-      .arcDashGap(d => d.t==='base' ? 0 : 0.96)
-      .arcDashAnimateTime(d => d.t==='base' ? 0 : 2500)
+      .arcStroke(d => d.layer==='base' ? 0.5 : 0.25)
+      .arcDashLength(d => d.layer==='base' ? 1 : 0.04)
+      .arcDashGap(d => d.layer==='base' ? 0 : 0.96)
+      .arcDashAnimateTime(d => d.layer==='base' ? 0 : 2500)
       .arcLabel(() => '')
       // Country borders
       .polygonsData([])
